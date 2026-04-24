@@ -1,0 +1,49 @@
+site_name: QNX Helper
+site_description: QNX 学习资料、实践记录与问题整理
+site_url: https://swartzmss.github.io/QNX_Helper/
+repo_url: https://github.com/SwartzMss/QNX_Helper
+repo_name: QNX_Helper
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - 首页: index.md
+  - 入门:
+      - QNX 简介: getting-started/overview.md
+      - 环境搭建: getting-started/setup.md
+  - 基础概念:
+      - 微内核与消息传递: fundamentals/microkernel-and-messaging.md
+      - 进程与线程: fundamentals/process-and-thread.md
+  - 开发实践:
+      - 常用命令记录: practice/common-commands.md
+      - 交叉编译与调试: practice/build-and-debug.md
+  - 问题记录:
+      - 踩坑模板: notes/troubleshooting-template.md
+  - 参考资料:
+      - 学习路线与资料: references/resources.md
