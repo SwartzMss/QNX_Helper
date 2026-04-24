@@ -5,15 +5,10 @@ repo_url: https://github.com/SwartzMss/QNX_Helper
 repo_name: QNX_Helper
 
 theme:
-  name: material
-  language: zh
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.top
-    - search.suggest
-    - search.highlight
-    - content.code.copy
+  name: readthedocs
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - admonition
@@ -34,16 +29,11 @@ markdown_extensions:
 
 nav:
   - 首页: index.md
-  - 入门:
-      - QNX 简介: getting-started/overview.md
-      - 环境搭建: getting-started/setup.md
-  - 基础概念:
-      - 微内核与消息传递: fundamentals/microkernel-and-messaging.md
-      - 进程与线程: fundamentals/process-and-thread.md
-  - 开发实践:
-      - 常用命令记录: practice/common-commands.md
-      - 交叉编译与调试: practice/build-and-debug.md
-  - 问题记录:
-      - 踩坑模板: notes/troubleshooting-template.md
-  - 参考资料:
-      - 学习路线与资料: references/resources.md
+  - QNX 简介: getting-started/overview.md
+  - 环境搭建: getting-started/setup.md
+  - 微内核与消息传递: fundamentals/microkernel-and-messaging.md
+  - 进程与线程: fundamentals/process-and-thread.md
+  - 常用命令记录: practice/common-commands.md
+  - 交叉编译与调试: practice/build-and-debug.md
+  - 踩坑模板: notes/troubleshooting-template.md
+  - 学习路线与资料: references/resources.md

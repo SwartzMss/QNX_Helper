@@ -1,0 +1,9 @@
+.wy-nav-content {
+    max-width: 100%;
+}
+
+@media (min-width: 1800px) {
+    .wy-nav-content {
+        max-width: 1800px;
+    }
+}
