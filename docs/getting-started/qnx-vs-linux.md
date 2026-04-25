@@ -69,6 +69,27 @@ MsgReply();
 
 QNX 把“进程间通信”提升成了系统架构的主干。
 
+这里有一个很重要的补充：
+
+这组接口在 QNX 里不是“只存在于文档里”，而是真的会直接用到。
+
+最常见的场景是：
+
+- 自己写 IPC
+- 写服务进程
+- 写 `resource manager`
+- 做客户端 / 服务端模型
+
+不过也要分清两层：
+
+- 写普通应用时，不一定总要自己手写这些接口
+- 写底层服务、系统组件、消息式架构时，往往就会直接写到它们
+
+可以把它们理解成：
+
+- `open/read/write` 是上层常见接口
+- `MsgSend/MsgReceive/MsgReply` 是 QNX 更底层也更核心的通信接口
+
 ## 3. Resource Manager 是 QNX 很大的不同点
 
 这是从 Linux 转 QNX 时非常重要的概念。
@@ -91,6 +112,35 @@ devctl(fd, ...);
 ```
 
 但底层其实是消息发送给 `resource manager` 处理。
+
+这里也很容易误解成“QNX 里不能直接写 `open()`、`read()`、`write()`”。
+
+其实不是。QNX 里当然可以这样写，而且这本来就是很常见的写法。
+
+例如：
+
+```c
+#include <fcntl.h>
+#include <unistd.h>
+
+int main(void) {
+    int fd = open("/dev/ser1", O_RDWR);
+    if (fd == -1) {
+        return 1;
+    }
+
+    char buf[16];
+    read(fd, buf, sizeof(buf));
+    write(fd, "ok\n", 3);
+    close(fd);
+    return 0;
+}
+```
+
+真正的差异不在“能不能写 `open/read/write`”，而在于：
+
+- Linux 里更容易把它理解成系统调用直接进入内核处理
+- QNX 里很多时候这些操作背后会被转换成消息，交给对应的 `resource manager` 或服务进程处理
 
 这点和 Linux driver 最大区别是：
 
