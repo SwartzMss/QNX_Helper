@@ -6,20 +6,13 @@
 
 - [QNX 简介](./getting-started/overview.md)
 - [环境搭建](./getting-started/setup.md)
-- [微内核与消息传递](./fundamentals/microkernel-and-messaging.md)
-- [进程与线程](./fundamentals/process-and-thread.md)
-- [常用命令记录](./practice/common-commands.md)
-- [交叉编译与调试](./practice/build-and-debug.md)
-- [踩坑模板](./notes/troubleshooting-template.md)
-- [学习路线与资料](./references/resources.md)
 
 ## 这个项目会重点记录什么
 
 - QNX 基础概念
 - 开发环境与工具链
-- 常见命令和系统观察方法
-- 编译、部署和调试过程
-- 学习中的问题记录与经验总结
+- 学习中的安装与实践记录
+- 后续专题的持续补充
 
 ## 适合什么阶段的人
 
@@ -32,20 +25,19 @@
 建议先看这些页面：
 
 1. 先看 [QNX 简介](./getting-started/overview.md)，建立整体认识。
-2. 再看 [微内核与消息传递](./fundamentals/microkernel-and-messaging.md) 和 [进程与线程](./fundamentals/process-and-thread.md)。
-3. 然后看 [常用命令记录](./practice/common-commands.md) 与 [交叉编译与调试](./practice/build-and-debug.md)。
+2. 再看 [环境搭建](./getting-started/setup.md)，把开发环境先固定下来。
 
 ## 学习建议
 
-学习 QNX 时，建议把“概念理解”和“真实问题记录”一起推进。只记命令很容易忘，只看概念又很难形成直觉。比较有效的方式是先建立系统模型，再用实际部署、调试和踩坑去加深理解。
+学习 QNX 时，先把整体概念和开发环境理顺最重要。先知道系统是什么、为什么这样设计、开发环境如何落地，后面再逐步扩展到消息传递、调试、驱动和专题实践，会更稳一些。
 
 ## 后续可继续补充的方向
 
+- 常用命令整理
+- 编译与调试记录
 - 启动流程分析
 - BSP 与驱动开发
-- 串口、网络、文件系统实验记录
-- IPC 示例与源码解读
-- 常见错误案例库
+- 实际踩坑案例
 
 ---
 

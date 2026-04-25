@@ -31,9 +31,3 @@ nav:
   - 首页: index.md
   - QNX 简介: getting-started/overview.md
   - 环境搭建: getting-started/setup.md
-  - 微内核与消息传递: fundamentals/microkernel-and-messaging.md
-  - 进程与线程: fundamentals/process-and-thread.md
-  - 常用命令记录: practice/common-commands.md
-  - 交叉编译与调试: practice/build-and-debug.md
-  - 踩坑模板: notes/troubleshooting-template.md
-  - 学习路线与资料: references/resources.md
