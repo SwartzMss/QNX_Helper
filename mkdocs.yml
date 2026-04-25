@@ -31,3 +31,4 @@ nav:
   - QNX 简介: getting-started/overview.md
   - 环境搭建: getting-started/setup.md
   - 常用命令: commands/common-commands.md
+  - Crash 调试: debug/crash-debugging.md
