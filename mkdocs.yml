@@ -28,6 +28,5 @@ markdown_extensions:
       alternate_style: true
 
 nav:
-  - 首页: index.md
   - QNX 简介: getting-started/overview.md
   - 环境搭建: getting-started/setup.md
