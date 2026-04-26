@@ -231,7 +231,64 @@ echo 1234 > /proc/dumper
 
 不要只拿 `core`。
 
-## 9. 把 core 从 target 拷回 host
+## 9. 如果 core 属于 `root`，先提升权限再处理
+
+当前这台板子的实际情况里，`crash_demo.core` 是这样生成的：
+
+```bash
+$ ls -lt crash_demo*
+-rw-------  2 root    root    1630208 1970-01-02 19:58 crash_demo.core
+-rwxr-xr-x  2 qnxuser qnxuser   10184 1970-01-02 19:57 crash_demo
+```
+
+这意味着普通用户 `qnxuser` 不能直接：
+
+```bash
+scp qnxuser@192.168.3.153:/tmp/crash_demo.core ./
+```
+
+也不能直接：
+
+```bash
+chmod 644 /tmp/crash_demo.core
+```
+
+因为文件属主是 `root:root`。
+
+先切到高权限用户：
+
+```bash
+su
+```
+
+或者：
+
+```bash
+su root
+```
+
+切过去以后，可以直接改权限：
+
+```bash
+chmod 644 /tmp/crash_demo.core
+```
+
+或者改属主再保留更严格的权限：
+
+```bash
+chown qnxuser:qnxuser /tmp/crash_demo.core
+chmod 600 /tmp/crash_demo.core
+```
+
+如果你不想动原文件，也可以复制一份给普通用户读取：
+
+```bash
+cp /tmp/crash_demo.core /tmp/crash_demo_copy.core
+chown qnxuser:qnxuser /tmp/crash_demo_copy.core
+chmod 600 /tmp/crash_demo_copy.core
+```
+
+## 10. 把 core 从 target 拷回 host
 
 例如：
 
@@ -248,10 +305,16 @@ scp qnxuser@192.168.3.153:/path/to/app .
 对于最小示例，就是：
 
 ```bash
-scp qnxuser@192.168.3.153:/path/to/crash_demo.core .
+scp qnxuser@192.168.3.153:/tmp/crash_demo.core ./
 ```
 
-## 10. 先用 `coreinfo`
+如果你是先复制了一份普通用户可读的文件，就改成：
+
+```bash
+scp qnxuser@192.168.3.153:/tmp/crash_demo_copy.core ./
+```
+
+## 11. 先在 Host 上用 `coreinfo`
 
 先确认 core 内容对不对：
 
@@ -269,7 +332,58 @@ coreinfo -s ./app.core
 - `-m`：看内存映射
 - `-s`：看系统信息
 
-## 11. 在 Host 上分析 core
+当前这套环境里，`coreinfo` 是在 Host 上执行的：
+
+```bash
+$ which coreinfo
+/home/swartz/qnx800/host/linux/x86_64/usr/bin/coreinfo
+```
+
+实际示例：
+
+```bash
+$ coreinfo crash_demo.core
+crash_demo.core:
+ processor=ARM AArch64 num_cpus=4
+  cpu 1 cpu=1095749809 name=Cortex-A76 speed=2400
+   flags=0x000000c0f08c7a FPU MMU
+  cpu 2 cpu=1095749809 name=Cortex-A76 speed=2400
+   flags=0x000000c0f08c7a FPU MMU
+  cpu 3 cpu=1095749809 name=Cortex-A76 speed=2400
+   flags=0x000000c0f08c7a FPU MMU
+  cpu 4 cpu=1095749809 name=Cortex-A76 speed=2400
+   flags=0x000000c0f08c7a FPU MMU
+ cyc/sec=54000000 tod_adj=0 inc=1000000
+ boot=0 epoch=1970 intr=27
+ period=1851851851 scale=-17 load_max=18446744073709551615
+   MACHINE="RaspberryPi5" HW_PROVIDER="Sony UK" ARCHITECTURE="BCM2712"
+   HW_SERIAL="48498aabcbc5c4e4" HOSTNAME="localhost"
+ pid=50257946 parent=49680409 child=0 pgrp=50257946 sid=49680409
+ flags=0x59002400 umask=022 base_addr=0x1e6272e000 init_stack=0x2a67c32b50
+ ruid=1000 euid=1000 suid=1000  rgid=1000 egid=1000 sgid=1000
+ ign=0000000000000000 queue=ff00000000000000 pending=0000000000000000
+ fds=3 threads=1 timers=0 chans=1
+ canstub=0 sigstub=0
+argc: 1 argv: ./crash_demo
+
+ thread 1 SIGNALLED-unknown(0) code=0  from pid=0 uid=0 value=0(0x0)
+  ip=0x1e6272e7f4 sp=0x2a67c32b30 stkbase=0x2a67bb2000 stksize=528384
+  state=STOPPED flags=0 last_cpu=1 timeout=00000000
+  pri=10 realpri=10 policy=RR
+  tls=0x2a67c32f60
+```
+
+从这个输出里，至少可以先确认：
+
+- 这是 Raspberry Pi 5 上生成的 core
+- 架构是 ARM AArch64
+- 进程名和参数是 `./crash_demo`
+- 当前 core 里只有 1 个线程
+- 线程状态已经是 `STOPPED`
+
+如果 Target 上也带了 `coreinfo`，也可以直接在 Target 上看；但对当前这套环境来说，默认推荐把 `coreinfo` 放在 Host 分析流程里。
+
+## 12. 在 Host 上分析 core
 
 这种方式更适合当前这套开发环境。
 
@@ -300,7 +414,7 @@ ntoaarch64-gdb ./app ./app-*.core
 - 分析时更方便保存输出
 - 更适合长期排查和反复看调用栈
 
-## 12. 在 Target 上分析 core
+## 13. 在 Target 上分析 core
 
 如果 target 上也带了相关调试工具，也可以直接在 target 上看 core。
 
@@ -330,7 +444,7 @@ ntoaarch64-gdb /path/to/app /path/to/app.core
 - target 资源通常更紧张
 - 交互体验通常不如 host
 
-## 13. 用 `ntoaarch64-gdb` 解析 core
+## 14. 用 `ntoaarch64-gdb` 解析 core
 
 Raspberry Pi 5 这种 AArch64 目标：
 
@@ -357,13 +471,15 @@ info args
 3. `frame 0`
 4. `info locals`
 
-## 14. 一套最小流程
+## 15. 一套最小流程
 
 ### target
 
 ```bash
 ./app
 ls -l
+su
+chmod 644 /tmp/app.core
 ```
 
 如果程序没 crash，但要手工导：
@@ -376,7 +492,7 @@ dumper -p <pid>
 ### host 分析
 
 ```bash
-scp qnxuser@192.168.3.153:/path/to/app.core .
+scp qnxuser@192.168.3.153:/tmp/app.core ./
 coreinfo -i ./app-*.core
 coreinfo -t ./app-*.core
 ntoaarch64-gdb ./app ./app-*.core
@@ -400,12 +516,13 @@ info locals
 info args
 ```
 
-## 15. 常见检查点
+## 16. 常见检查点
 
 如果流程走不通，先查这几个点：
 
 - `dumper` 是否真的在跑
 - core 实际默认落到了哪里
 - core 是否真的生成了
+- core 是否是 `root:root`
 - host 上的二进制是否和 target 崩溃时的版本一致
 - 符号是否保留
