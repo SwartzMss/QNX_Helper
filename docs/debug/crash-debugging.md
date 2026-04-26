@@ -91,7 +91,50 @@ QNX 里专门负责接收进程 crash 事件并生成 core 文件的后台服务
 
 `RECEIVE` 是正常状态，表示它正在后台等待请求，不是异常。
 
-## 3. 启动 `dumper`
+当前还额外确认到一件事：
+
+```bash
+$ cat /proc/20484/cmdline
+dumper
+```
+
+这说明当前 `dumper` 看起来是默认参数启动，没有额外带 `-d` 之类的目录参数。
+
+## 3. 当前这台板子的默认 core 生成行为
+
+在这台 Raspberry Pi 5 上，实际验证结果是：
+
+- 不需要先手工创建 `/var/dumps`
+- 程序 crash 后，core 会直接生成在当前用户的默认目录里
+
+最小示例实际输出：
+
+```bash
+$ ./crash_demo
+about to crash
+
+Process 50257946 (crash_demo) terminated SIGSEGV code=1 fltno=11 ip=0000001e6272e7f4 mapaddr=00000000000007f4 ref=0000000000000000
+Memory fault (core dumped)
+```
+
+然后直接可以看到：
+
+```bash
+$ ls
+crash_demo  crash_demo.core  fs9  pci  slogger2  ssh_host_ecdsa_key  ssh_host_ecdsa_key.pub  ssh_host_ed25519_key  ssh_host_ed25519_key.pub  ssh_host_rsa_key  ssh_host_rsa_key.pub  sshd_config
+```
+
+以及：
+
+```bash
+$ ls -lt crash_demo*
+-rw-------  2 root    root    1630208 1970-01-02 19:58 crash_demo.core
+-rwxr-xr-x  2 qnxuser qnxuser   10184 1970-01-02 19:57 crash_demo
+```
+
+## 4. 如果想固定输出目录，再重启 `dumper`
+
+如果你不想让 core 落在默认位置，而是想统一保存到固定目录，例如 `/var/dumps`，这时才需要手工指定。
 
 先准备 core 目录：
 
@@ -123,43 +166,16 @@ dumper -v -d /var/dumps -u &
 
 如果像当前这台板子一样，`dumper` 已经在后台运行，就不要重复起多个实例。先确认它当前的启动方式，再决定是否需要重启并带上新的参数。
 
-## 4. 运行程序并保留第一现场
-
-如果程序是前台启动，直接在终端运行：
-
-```bash
-./app
-```
-
-先保留这些内容：
-
-- crash 前最后几行应用日志
-- 终端输出
-- 启动命令
-- 程序参数
-
-如果程序是后台启动，建议把输出重定向到文件：
-
-```bash
-./app > /var/log/app.log 2>&1 &
-```
-
-对最小示例来说，可以直接执行：
-
-```bash
-cd /tmp
-./crash_demo
-```
-
 ## 5. crash 后确认 core 是否生成
 
 ```bash
-ls -l /var/dumps
+ls -l
 ```
 
 常见文件名：
 
 ```text
+app.core
 app-YYYYMMDD_HHMMSS_MSEC.core
 app.1.core
 ```
@@ -167,8 +183,9 @@ app.1.core
 如果没有 core：
 
 1. 先确认 `dumper` 是否真的在跑
-2. 确认 `/var/dumps` 可写
-3. 再次手工启动 `dumper`
+2. 先在当前目录、当前用户目录和 `/tmp` 里找
+3. 如果你自己给 `dumper` 指定过 `-d`，再去对应目录找
+4. 再考虑是否需要重启 `dumper`
 
 ## 6. 手工导出指定进程的 core
 
@@ -181,7 +198,7 @@ pidin | grep app
 然后导出：
 
 ```bash
-dumper -p 1234 -d /var/dumps
+dumper -p 1234
 ```
 
 这个命令适合：
@@ -191,7 +208,7 @@ dumper -p 1234 -d /var/dumps
 
 ## 7. 通过 `/proc/dumper` 主动触发
 
-先这样启动：
+如果你想用 `/proc/dumper` 这种方式，才需要重新带 `-a` 启动：
 
 ```bash
 dumper -a -d /var/dumps -u &
@@ -219,7 +236,7 @@ echo 1234 > /proc/dumper
 例如：
 
 ```bash
-scp qnxuser@192.168.3.153:/var/dumps/app-*.core .
+scp qnxuser@192.168.3.153:/path/to/app.core .
 ```
 
 如果程序文件也在 target 上，也一起拷回：
@@ -231,7 +248,7 @@ scp qnxuser@192.168.3.153:/path/to/app .
 对于最小示例，就是：
 
 ```bash
-scp qnxuser@192.168.3.153:/var/dumps/crash_demo*.core .
+scp qnxuser@192.168.3.153:/path/to/crash_demo.core .
 ```
 
 ## 10. 先用 `coreinfo`
@@ -265,7 +282,7 @@ coreinfo -s ./app.core
 示例：
 
 ```bash
-scp qnxuser@192.168.3.153:/var/dumps/app-*.core .
+scp qnxuser@192.168.3.153:/path/to/app.core .
 scp qnxuser@192.168.3.153:/path/to/app .
 ```
 
@@ -297,9 +314,9 @@ which ntoaarch64-gdb
 如果存在，就可以直接在 target 上执行：
 
 ```bash
-coreinfo -i /var/dumps/app.core
-coreinfo -t /var/dumps/app.core
-ntoaarch64-gdb /path/to/app /var/dumps/app.core
+coreinfo -i /path/to/app.core
+coreinfo -t /path/to/app.core
+ntoaarch64-gdb /path/to/app /path/to/app.core
 ```
 
 这种方式的优点：
@@ -345,23 +362,21 @@ info args
 ### target
 
 ```bash
-mkdir -p /var/dumps
-dumper -d /var/dumps -u &
 ./app
-ls -l /var/dumps
+ls -l
 ```
 
 如果程序没 crash，但要手工导：
 
 ```bash
 pidin | grep app
-dumper -p <pid> -d /var/dumps
+dumper -p <pid>
 ```
 
 ### host 分析
 
 ```bash
-scp qnxuser@192.168.3.153:/var/dumps/app-*.core .
+scp qnxuser@192.168.3.153:/path/to/app.core .
 coreinfo -i ./app-*.core
 coreinfo -t ./app-*.core
 ntoaarch64-gdb ./app ./app-*.core
@@ -370,9 +385,9 @@ ntoaarch64-gdb ./app ./app-*.core
 ### target 分析
 
 ```bash
-coreinfo -i /var/dumps/app-*.core
-coreinfo -t /var/dumps/app-*.core
-ntoaarch64-gdb /path/to/app /var/dumps/app-*.core
+coreinfo -i /path/to/app.core
+coreinfo -t /path/to/app.core
+ntoaarch64-gdb /path/to/app /path/to/app.core
 ```
 
 ### GDB 内
@@ -390,7 +405,7 @@ info args
 如果流程走不通，先查这几个点：
 
 - `dumper` 是否真的在跑
-- core 目录是否可写
+- core 实际默认落到了哪里
 - core 是否真的生成了
 - host 上的二进制是否和 target 崩溃时的版本一致
 - 符号是否保留

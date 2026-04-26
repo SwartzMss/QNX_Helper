@@ -338,3 +338,38 @@ customize_startup.sh  fan_start.sh  i2c_start.sh  ldqnx-64.so  ldqnx-64.so.2  ne
 - `startup-script`
 - `ldqnx-64.so`
 - 各类启动脚本
+
+## 6. 查看系统日志
+
+### `slog2info`
+
+用于查看 `slog2` 日志缓冲区里的内容。
+
+它可以粗略理解成 QNX 里很重要的系统日志查看工具，作用上有点接近 Linux 下查看系统日志，但不完全等同于 `dmesg`。
+
+```bash
+slog2info
+```
+
+示例输出：
+
+```text
+Jan 01 00:23:35.750           sshd_session.1613851                 slog*     0  <38>Jan 01 00:23:35 sshd-session[1613851-1]: Received disconnect from 192.168.3.196 port 62754:11: disconnected by user
+Jan 01 00:23:35.750        sshd_session.1613851..0                 slog*     0  <38>Jan 01 00:23:35 sshd-session[1613851-1]: Disconnected from user qnxuser 192.168.3.196 port 62754
+Jan 01 00:23:38.790           sshd_session.1507352                 slog*     0  <38>Jan 01 00:23:38 sshd-session[1507352-1]: Received disconnect from 192.168.3.196 port 65118:11: disconnected by user
+Jan 01 00:23:38.791        sshd_session.1507352..0                 slog*     0  <38>Jan 01 00:23:38 sshd-session[1507352-1]: Disconnected from user qnxuser 192.168.3.196 port 65118
+Jan 02 19:30:14.378           sshd_session.1650712                 slog*     0  <38>Jan 02 19:30:14 sshd-session[1650712-1]: Read error from remote host 192.168.3.196 port 65329: Connection reset
+```
+
+从这个输出里可以看出：
+
+- `sshd-session` 把日志写进了 `slog2`
+- SSH 连接断开和连接重置事件都能看到
+- 这类日志适合用来排查系统服务和后台进程的异常
+
+如果只是粗略类比，可以把它理解成更接近 Linux 下的：
+
+- `journalctl`
+- `syslog`
+
+而不是严格等价于 `dmesg`
