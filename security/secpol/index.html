@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://swartzmss.github.io/QNX_Helper/security/secpol/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>安全策略（secpol） - QNX Helper</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../stylesheets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u5b89\u5168\u7b56\u7565\uff08secpol\uff09";
+        var mkdocs_page_input_path = "security/secpol.md";
+        var mkdocs_page_url = "/QNX_Helper/security/secpol/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> QNX Helper
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/overview/">QNX 简介</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/qnx-vs-linux/">QNX 和 Linux 的区别</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/setup/">环境搭建</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../commands/common-commands/">常用命令</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">安全策略（secpol）</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1-secpol">1. secpol 到底是什么</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2">2. 为什么它重要</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-secpol">3. 理解 secpol 的几个关键概念</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#type">type</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ability">ability</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#rule">rule</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-secpol">4. secpol 相关工具分别干什么</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#secpol_1">secpol</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#secpolgenerate">secpolgenerate</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#secpolcompile">secpolcompile</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#secpolpush">secpolpush</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5">5. 开发时最常见的工作流</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_1">第一步：给长期服务分配类型</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_2">第二步：在开发模式下生成策略</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_3">第三步：充分跑你的系统</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#host">第四步：把文本策略拿回 host 编译</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#secure">第五步：把编译结果放进镜像并 secure 启动</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6-mkqnximage-open-secure">6. mkqnximage 里的 open 和 secure</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7">7. 怎么看当前系统里的类型</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#8-secpol">8. secpol 常见查看命令</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_4">校验策略</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_5">查看策略内容概况</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#type-ability">基于 type 或 ability 过滤</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#9">9. 初学时最容易踩的坑</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#-t-secpolpush">只给进程加了 -T，但没有尽早 secpolpush</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#type_1">多个长期服务共用同一个 type</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_6">生成策略时没有充分覆盖业务路径</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_7">把自动生成的规则原样当最终版</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#shell">过早把 shell 当成正式策略对象</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10">10. 对你这个仓库来说，现阶段最值得先记住的点</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_8">参考资料</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol-policy-example/">secpol 策略语言与示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol-resource-manager-example/">Resource Manager 的 secpol 示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol-troubleshooting/">secpol 排错与检查清单</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../debug/crash-debugging/">Crash 调试</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">QNX Helper</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">安全策略（secpol）</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/SwartzMss/QNX_Helper/edit/master/docs/security/secpol.md">Edit on QNX_Helper</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="secpol">安全策略（secpol）<a class="headerlink" href="#secpol" title="Permanent link">&para;</a></h1>
+<p><code>secpol</code> 是 QNX 安全能力里非常核心的一块。它对应的是 <strong>security policy</strong>，也就是“系统安全策略”。</p>
+<p>如果前面学 QNX 更像是在理解微内核、消息传递、resource manager 和启动镜像，那么 <code>secpol</code> 这部分更像是在回答另一个问题：</p>
+<blockquote>
+<p>系统里的每个长期运行进程，到底被允许做什么，不被允许做什么？</p>
+</blockquote>
+<p>QNX 的做法不是只靠传统的 <code>root/non-root</code> 区分，而是引入 <strong>type + rule + ability</strong> 这一套策略机制，把权限控制细化到进程类型、对象类型和具体能力上。</p>
+<h2 id="1-secpol">1. <code>secpol</code> 到底是什么<a class="headerlink" href="#1-secpol" title="Permanent link">&para;</a></h2>
+<p>可以先把它理解成两层：</p>
+<ul>
+<li><strong>security policy</strong>：策略本身，定义“谁可以做什么”</li>
+<li><strong><code>secpol</code> 工具</strong>：用于查看和校验已编译策略文件的目标端工具</li>
+</ul>
+<p>QNX 的安全策略文件会定义：</p>
+<ul>
+<li>进程使用什么 <code>type</code></li>
+<li>这个 <code>type</code> 允许使用哪些 <code>ability</code></li>
+<li>它能连接哪些 channel</li>
+<li>它能在哪些路径上 attach</li>
+<li>它和其他类型的对象之间允许发生什么交互</li>
+</ul>
+<p>QNX 官方文档明确说明：<strong>系统没有默认安全策略</strong>。也就是说，是否启用、怎么划分类型、每个服务给什么权限，都需要系统集成人员自己设计和维护。</p>
+<h2 id="2">2. 为什么它重要<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>在不启用策略时，系统里很多进程默认约束比较弱，更多依赖传统权限模型。</p>
+<p>启用策略后，系统会进入一种更明确的“白名单”模式：</p>
+<ul>
+<li>一个服务只能做策略允许的事</li>
+<li>即使进程被攻破，也更难横向扩散</li>
+<li>系统服务之间的边界更清楚</li>
+<li>长期运行的 daemon / resource manager 更容易收敛权限</li>
+</ul>
+<p>这也是 QNX 在车载、工业、关键嵌入式场景里经常被提到的原因之一：它不只是“能跑”，而是强调 <strong>可控边界</strong>。</p>
+<h2 id="3-secpol">3. 理解 <code>secpol</code> 的几个关键概念<a class="headerlink" href="#3-secpol" title="Permanent link">&para;</a></h2>
+<h3 id="type"><code>type</code><a class="headerlink" href="#type" title="Permanent link">&para;</a></h3>
+<p><code>type</code> 是策略里的核心标签。一个进程启动时可以被赋予某个安全类型，例如：</p>
+<ul>
+<li><code>slogger2_t</code></li>
+<li><code>pipe_t</code></li>
+<li><code>devb_t</code></li>
+<li><code>console_t</code></li>
+</ul>
+<p>策略不是直接写“<code>/proc/boot/slogger2</code> 可以干什么”，而是写“<code>slogger2_t</code> 可以干什么”。</p>
+<p>这带来两个直接好处：</p>
+<ul>
+<li>规则更清晰</li>
+<li>同类行为可以复用</li>
+</ul>
+<p>但 QNX 官方也特别强调：<strong>长期运行的服务最好一进程一类型，不要多个长期服务共用一个 type</strong>。否则边界会被冲淡。</p>
+<h3 id="ability"><code>ability</code><a class="headerlink" href="#ability" title="Permanent link">&para;</a></h3>
+<p><code>ability</code> 可以理解成 QNX 里的“特权能力”。它比传统 Unix 权限更细。</p>
+<p>例如某个服务是否允许：</p>
+<ul>
+<li>管理 path space</li>
+<li>连接某类 channel</li>
+<li>做某些特权操作</li>
+</ul>
+<p>策略的核心工作之一，就是限制每个服务实际拥有的 <code>ability</code>。</p>
+<h3 id="rule"><code>rule</code><a class="headerlink" href="#rule" title="Permanent link">&para;</a></h3>
+<p>规则就是策略条目，用来表达：</p>
+<ul>
+<li>哪个 <code>type</code> 可以 attach 到哪个路径</li>
+<li>哪个 <code>type</code> 可以连到哪个对象类型</li>
+<li>哪些能力被允许，哪些要拒绝</li>
+</ul>
+<p>例如官方文档里给出的示意规则包括：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>allow_attach random_t /dev/random;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>allow random_t devb_t : channel connect;
+</code></pre></div>
+<p>不用先把语法细节背下来。初学阶段更重要的是先理解：<strong>规则最终是在限制进程和系统对象之间的交互边界</strong>。</p>
+<h2 id="4-secpol">4. <code>secpol</code> 相关工具分别干什么<a class="headerlink" href="#4-secpol" title="Permanent link">&para;</a></h2>
+<p>这一组工具很容易混在一起，最好分开记：</p>
+<h3 id="secpol_1"><code>secpol</code><a class="headerlink" href="#secpol_1" title="Permanent link">&para;</a></h3>
+<p>目标端工具，用来查看和校验 <strong>已编译的策略文件</strong>。</p>
+<p>常见用法：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>secpol<span class="w"> </span>-v
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>secpol<span class="w"> </span>-d
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>secpol<span class="w"> </span>-c
+</code></pre></div>
+<p>用途分别可以粗略理解成：</p>
+<ul>
+<li><code>-v</code>：校验策略</li>
+<li><code>-d</code>：看编译后策略里的 blob 列表</li>
+<li><code>-c</code>：看更详细的策略内容</li>
+</ul>
+<h3 id="secpolgenerate"><code>secpolgenerate</code><a class="headerlink" href="#secpolgenerate" title="Permanent link">&para;</a></h3>
+<p>目标端工具，用来 <strong>生成初始策略</strong>。这通常是开发阶段最常用的入口。</p>
+<p>它会根据系统实际运行时观察到的行为，生成一个文本策略文件，默认位置是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>/dev/secpolgenerate/policy
+</code></pre></div>
+<h3 id="secpolcompile"><code>secpolcompile</code><a class="headerlink" href="#secpolcompile" title="Permanent link">&para;</a></h3>
+<p>Host 端工具，用来把文本策略编译成二进制策略文件。</p>
+<p>也就是说，常见流程不是在 target 上手写并直接生效，而是：</p>
+<ol>
+<li>target 上观察系统行为</li>
+<li>生成文本策略</li>
+<li>拿回 host 编译</li>
+<li>再把编译结果放回镜像</li>
+</ol>
+<h3 id="secpolpush"><code>secpolpush</code><a class="headerlink" href="#secpolpush" title="Permanent link">&para;</a></h3>
+<p>用于把策略推给 <code>procnto</code>，触发策略真正开始生效。</p>
+<p>这一步非常关键。官方文档特别提到，<code>secpolpush</code> 应该是系统启动早期就做的事情之一。</p>
+<h2 id="5">5. 开发时最常见的工作流<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>如果你是第一次接触 <code>secpol</code>，最实用的理解方式不是死记语法，而是先抓住工作流。</p>
+<h3 id="_1">第一步：给长期服务分配类型<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<p>在启动脚本里，不再只是把服务拉起来，而是显式地带上 <code>type</code>。</p>
+<p>常见写法类似：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>on<span class="w"> </span>-T<span class="w"> </span>slogger2_t<span class="w"> </span>slogger2<span class="w"> </span>-U<span class="w"> </span><span class="m">20</span>:20
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>on<span class="w"> </span>-u<span class="w"> </span><span class="m">21</span>:21<span class="w"> </span>-T<span class="w"> </span>pipe_t<span class="w"> </span>pipe
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>on<span class="w"> </span>-u<span class="w"> </span><span class="m">22</span>:21<span class="w"> </span>-T<span class="w"> </span>random_t<span class="w"> </span>random
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>on<span class="w"> </span>-T<span class="w"> </span>devb_t<span class="w"> </span>-u<span class="w"> </span><span class="m">23</span><span class="w"> </span>devb-eide
+</code></pre></div>
+<p>这里最关键的不是参数顺序，而是这个思路：</p>
+<ul>
+<li>服务启动时就带 <code>-T</code></li>
+<li>每个长期存在的服务尽量有独立类型</li>
+<li>最好同时配合独立的 uid/gid 使用</li>
+</ul>
+<h3 id="_2">第二步：在开发模式下生成策略<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>官方文档中常见的生成方式类似：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>secpolgenerate<span class="w"> </span>-u<span class="w"> </span>-t<span class="w"> </span><span class="m">100</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">LD_PRELOAD</span><span class="o">=</span>secpol-preload.so
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>procmgr_symlink<span class="w"> </span>/proc/boot/libsecpol-gen.so.1<span class="w"> </span>/proc/boot/libsecpol.so.1
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>secpolpush
+</code></pre></div>
+<p>这里的重点不是逐字照抄，而是理解它在做什么：</p>
+<ul>
+<li>启动策略生成</li>
+<li>让系统在较开放的模式下先跑起来</li>
+<li>收集真实运行行为</li>
+<li>再据此生成初始策略</li>
+</ul>
+<p>QNX 官方文档把这种思路称为从较“开放”的开发状态出发，再逐步收敛到真正的 secure 模式。</p>
+<h3 id="_3">第三步：充分跑你的系统<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>只开机一次通常不够。</p>
+<p>你需要尽量覆盖真实场景，例如：</p>
+<ul>
+<li>存储设备挂载</li>
+<li>网络初始化</li>
+<li>ssh 登录</li>
+<li>业务进程启动</li>
+<li>设备节点访问</li>
+<li>异常路径和恢复路径</li>
+</ul>
+<p>因为 <code>secpolgenerate</code> 只能根据它“看到过”的行为生成规则。你没跑到的路径，后面 secure 启动时就可能被拒掉。</p>
+<h3 id="host">第四步：把文本策略拿回 host 编译<a class="headerlink" href="#host" title="Permanent link">&para;</a></h3>
+<p>生成出来的文本策略在 target 上可以这样读：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cat<span class="w"> </span>/dev/secpolgenerate/policy
+</code></pre></div>
+<p>官方文档还特别提醒：这里更适合用 <code>cat</code> 或 <code>sftp</code> 拿文件内容，不建议直接用 <code>scp</code>，因为生成文件的方式和普通静态文件不完全一样。</p>
+<p>拿回 host 后，再用 <code>secpolcompile</code> 编译成二进制策略。</p>
+<h3 id="secure">第五步：把编译结果放进镜像并 secure 启动<a class="headerlink" href="#secure" title="Permanent link">&para;</a></h3>
+<p>编译后的策略通常建议放在：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>/proc/boot/secpol.bin
+</code></pre></div>
+<p>然后在正式镜像里：</p>
+<ul>
+<li>移除 <code>secpolgenerate</code></li>
+<li>保留 <code>secpolpush</code></li>
+<li>让系统在真正受限的策略下启动</li>
+</ul>
+<p>这时系统只允许策略里定义过的行为。</p>
+<h2 id="6-mkqnximage-open-secure">6. <code>mkqnximage</code> 里的 <code>open</code> 和 <code>secure</code><a class="headerlink" href="#6-mkqnximage-open-secure" title="Permanent link">&para;</a></h2>
+<p>如果你是用 <code>mkqnximage</code> 组织镜像，官方文档里还有两个很重要的模式：</p>
+<ul>
+<li><code>--secpol=open</code></li>
+<li><code>--secpol=secure</code></li>
+</ul>
+<p>可以简单理解成：</p>
+<ul>
+<li><code>open</code>：偏开发/生成策略阶段，系统默认更宽松</li>
+<li><code>secure</code>：偏正式运行阶段，按给定策略严格限制</li>
+</ul>
+<p>官方文档同时说明：</p>
+<ul>
+<li><code>secure</code> 模式必须指定策略，否则系统无法启动</li>
+<li><code>open</code> 模式可以带策略，也可以不带，适合从零开始生成或在已有策略上继续迭代</li>
+</ul>
+<h2 id="7">7. 怎么看当前系统里的类型<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>一个很实用的命令是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+</code></pre></div>
+<p>在启用了相关安全策略机制的系统里，这个输出可以帮助你看：</p>
+<ul>
+<li>进程当前属于什么 type</li>
+<li>某些进程是否发生了 type transition</li>
+</ul>
+<p>官方文档提到，如果进程通过 <code>secpol_transition_type()</code> 切换类型，常会看到带 <code>__run</code> 后缀的类型名。</p>
+<h2 id="8-secpol">8. <code>secpol</code> 常见查看命令<a class="headerlink" href="#8-secpol" title="Permanent link">&para;</a></h2>
+<p>如果目标系统已经带了编译好的策略文件，可以先用这些命令做检查：</p>
+<h3 id="_4">校验策略<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>secpol<span class="w"> </span>-v
+</code></pre></div>
+<h3 id="_5">查看策略内容概况<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>secpol<span class="w"> </span>-d
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>secpol<span class="w"> </span>-c
+</code></pre></div>
+<h3 id="type-ability">基于 type 或 ability 过滤<a class="headerlink" href="#type-ability" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>secpol<span class="w"> </span>-t<span class="w"> </span>devb_t<span class="w"> </span>-c
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>secpol<span class="w"> </span>-a<span class="w"> </span>pathspace<span class="w"> </span>-f<span class="w"> </span>ability
+</code></pre></div>
+<p>实际支持的过滤项以目标系统里的 <code>secpol</code> 版本为准，但整体思路是一样的：先看整体，再按类型或能力缩小范围。</p>
+<h2 id="9">9. 初学时最容易踩的坑<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<h3 id="-t-secpolpush">只给进程加了 <code>-T</code>，但没有尽早 <code>secpolpush</code><a class="headerlink" href="#-t-secpolpush" title="Permanent link">&para;</a></h3>
+<p>这样类型标注和策略约束没有真正进入生效状态，结果往往会看起来“像配了，其实没真正限制住”。</p>
+<h3 id="type_1">多个长期服务共用同一个 type<a class="headerlink" href="#type_1" title="Permanent link">&para;</a></h3>
+<p>这会让权限边界变模糊，后面排查规则也会越来越难。</p>
+<h3 id="_6">生成策略时没有充分覆盖业务路径<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<p>最后 secure 启动后，很多行为会在现场才暴露失败。</p>
+<h3 id="_7">把自动生成的规则原样当最终版<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p><code>secpolgenerate</code> 很适合做起点，但不代表生成结果就是最小权限的最终答案。官方文档也明确建议后续继续审查和收敛不必要规则。</p>
+<h3 id="shell">过早把 shell 当成正式策略对象<a class="headerlink" href="#shell" title="Permanent link">&para;</a></h3>
+<p>开发阶段有 console 和 shell 很方便，但正式产品里这类入口通常需要更严格处理，不能直接沿用调试期配置。</p>
+<h2 id="10">10. 对你这个仓库来说，现阶段最值得先记住的点<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<p>如果现在还是 <code>QNX SDP 8.0 + Raspberry Pi 5</code> 的学习和实验环境，我建议先建立这几个最小认知：</p>
+<ul>
+<li><code>secpol</code> 不是单个命令，而是一整套 QNX 安全策略机制</li>
+<li><code>type</code> 是策略设计的核心</li>
+<li>长期服务启动时最好显式带 <code>on -T</code></li>
+<li>开发阶段通常先靠 <code>secpolgenerate</code> 生成初版策略</li>
+<li>正式阶段依靠 <code>secpolpush</code> + 已编译策略进入受限模式</li>
+<li><code>pidin -f a_n</code> 是观察类型分配的很好入口</li>
+</ul>
+<p>等后面仓库里开始出现：</p>
+<ul>
+<li>自定义 resource manager</li>
+<li>自己的长期后台服务</li>
+<li>需要限制设备节点、路径或 channel 访问</li>
+</ul>
+<p>那时再继续补一页更细的“策略语言”和“实战示例”，会更顺。</p>
+<h2 id="_8">参考资料<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p>以下内容主要基于 QNX 官方文档整理：</p>
+<ul>
+<li>QNX SDP 8.0 System Security Guide: Implementing security policies<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/using_security_policies.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/using_security_policies.html</a></li>
+<li>QNX SDP 8.0 Utilities Reference: <code>secpol</code><br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/s/secpol.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/s/secpol.html</a></li>
+<li>QNX SDP 8.0 System Security Guide: Secpol and policy options<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/mkqnximage_secpol.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/mkqnximage_secpol.html</a></li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../commands/common-commands/" class="btn btn-neutral float-left" title="常用命令"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../secpol-policy-example/" class="btn btn-neutral float-right" title="secpol 策略语言与示例">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/SwartzMss/QNX_Helper" class="fa fa-code-fork" style="color: #fcfcfc"> QNX_Helper</a>
+        </span>
+    
+    
+      <span><a href="../../commands/common-commands/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../secpol-policy-example/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

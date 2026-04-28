@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://swartzmss.github.io/QNX_Helper/security/secpol-troubleshooting/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>secpol 排错与检查清单 - QNX Helper</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../stylesheets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "secpol \u6392\u9519\u4e0e\u68c0\u67e5\u6e05\u5355";
+        var mkdocs_page_input_path = "security/secpol-troubleshooting.md";
+        var mkdocs_page_url = "/QNX_Helper/security/secpol-troubleshooting/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> QNX Helper
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/overview/">QNX 简介</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/qnx-vs-linux/">QNX 和 Linux 的区别</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/setup/">环境搭建</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../commands/common-commands/">常用命令</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol/">安全策略（secpol）</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol-policy-example/">secpol 策略语言与示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol-resource-manager-example/">Resource Manager 的 secpol 示例</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">secpol 排错与检查清单</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1">1. 先建立一个排错顺序</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2">2. 先看哪几个命令</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_1">看进程和类型</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_2">看自动生成的策略</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_3">看错误信息</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_4">看实时安全事件</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3">3. 现象一：服务进程根本没按预期起来</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_5">常见表现</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_6">优先检查什么</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_7">常见原因</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_8">实用判断</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-resource-manager">4. 现象二：resource manager 路径挂不上</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_9">常见表现</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_10">第一反应该看什么</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_11">最常见的策略原因</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_12">你应该怎么想</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5">5. 现象三：路径存在，但客户端访问失败</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_13">常见表现</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_14">优先检查什么</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_15">为什么会这样</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_16">排查建议</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6-errors-ability">6. 现象四：errors 里提示缺某个 ability</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_17">但这里有一个很重要的判断</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7">7. 现象五：每次生成的策略都在变</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_18">常见表现</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_19">官方文档的解释方向</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_20">这类问题怎么理解</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_21">文档建议方向</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#8-errors">8. 现象六：errors 里有报错，但系统表面上没坏</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_22">这意味着什么</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#9-secure">9. 现象七：secure 模式启动后系统更早就坏掉</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_23">常见原因</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_24">先看哪里</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10-secpol">10. 现象八：怀疑是文件权限，不确定是不是 secpol</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_25">怎么区分</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#11">11. 一个推荐的排错动作模板</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_26">第一步：记录现象</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#type">第二步：记录当前 type</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#errors">第三步：看 errors</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_27">第四步：看策略文本</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_28">第五步：必要时开实时监控</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12">12. 一个适合你后面补真实输出的排错记录模板</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_29">故障现象</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_30">相关命令</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_31">实际输出</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_32">初步判断</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_33">修正动作</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_34">结果验证</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13">13. 这一页最该记住的几点</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_35">参考资料</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../debug/crash-debugging/">Crash 调试</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">QNX Helper</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">secpol 排错与检查清单</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/SwartzMss/QNX_Helper/edit/master/docs/security/secpol-troubleshooting.md">Edit on QNX_Helper</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="secpol">secpol 排错与检查清单<a class="headerlink" href="#secpol" title="Permanent link">&para;</a></h1>
+<p>这一页专门写 <code>secpol</code> 排错，不再重复前面的概念说明。</p>
+<p>它的目标很直接：</p>
+<ul>
+<li>你在板子上碰到“服务起不来”“路径挂不上”“客户端连不上”“策略生成不对劲”时</li>
+<li>能先按现象定位到大概是哪一层出了问题</li>
+<li>再决定该看 <code>type</code>、<code>allow_attach</code>、<code>channel connect</code> 还是 <code>ability</code></li>
+</ul>
+<p>如果前几页偏“建立知识框架”，这一页更像“实验时放在手边的检查单”。</p>
+<h2 id="1">1. 先建立一个排错顺序<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>很多人一碰到 <code>secpol</code> 问题，就立刻去怀疑 ability。</p>
+<p>但实际排查时，通常更高效的顺序是：</p>
+<ol>
+<li>先确认进程到底是不是按预期 type 启动了</li>
+<li>再确认路径 attach 有没有成功</li>
+<li>再确认客户端 channel connect 有没有被允许</li>
+<li>最后才去查 ability 或更细的子范围</li>
+</ol>
+<p>这个顺序很重要，因为很多现象看起来像“权限不够”，其实更早一层就已经错了。</p>
+<h2 id="2">2. 先看哪几个命令<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>如果系统还能正常进 shell，我建议先看这几个入口。</p>
+<h3 id="_1">看进程和类型<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+</code></pre></div>
+<p>这个命令最适合回答：</p>
+<ul>
+<li>进程是不是按预期启动了</li>
+<li>进程现在属于什么 type</li>
+<li>有没有出现 <code>__run</code> 之类的过渡类型</li>
+</ul>
+<h3 id="_2">看自动生成的策略<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cat<span class="w"> </span>/dev/secpolgenerate/policy
+</code></pre></div>
+<p>这个命令最适合回答：</p>
+<ul>
+<li>系统运行过程中观察到了哪些规则</li>
+<li>哪些 <code>allow_attach</code> 和 <code>ability</code> 被记录到了</li>
+</ul>
+<h3 id="_3">看错误信息<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cat<span class="w"> </span>/dev/secpolgenerate/errors
+</code></pre></div>
+<p>QNX 官方文档明确建议：<strong>出了问题先看 <code>/dev/secpolgenerate/errors</code></strong>。</p>
+<p>它通常是最直接的入口。</p>
+<h3 id="_4">看实时安全事件<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>secpolmonitor<span class="w"> </span>-a<span class="w"> </span>-p
+</code></pre></div>
+<p>它适合看：</p>
+<ul>
+<li>ability 检查</li>
+<li>path attachment 行为</li>
+</ul>
+<p>如果你想聚焦某个进程，也可以加过滤：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>secpolmonitor<span class="w"> </span>-a<span class="w"> </span>-p<span class="w"> </span>-f<span class="w"> </span>my_sensor_srv
+</code></pre></div>
+<h2 id="3">3. 现象一：服务进程根本没按预期起来<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>这是最先要排的情况。</p>
+<h3 id="_5">常见表现<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>pidin</code> 里找不到进程</li>
+<li>进程起来就退出</li>
+<li>进程名字在，但 type 不对</li>
+</ul>
+<h3 id="_6">优先检查什么<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<p>先看：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+</code></pre></div>
+<p>重点确认：</p>
+<ul>
+<li>进程是否存在</li>
+<li>是否带上了预期 type</li>
+<li>是否发生了 type transition</li>
+</ul>
+<h3 id="_7">常见原因<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li>启动脚本没加 <code>on -T</code></li>
+<li><code>on -T</code> 写了，但服务实际不是通过这条路径启动</li>
+<li>服务内部又切换了 type</li>
+<li>进程本身在更早阶段就因为别的问题退出了</li>
+</ul>
+<h3 id="_8">实用判断<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p>如果进程连存在都不存在，先别急着改策略。</p>
+<p>这时优先判断：</p>
+<ul>
+<li>是进程压根没启动成功</li>
+<li>还是启动了，但被安全策略拦住后立刻退出</li>
+</ul>
+<p>这两类问题的处理方向不一样。</p>
+<h2 id="4-resource-manager">4. 现象二：resource manager 路径挂不上<a class="headerlink" href="#4-resource-manager" title="Permanent link">&para;</a></h2>
+<p>这类问题在自定义服务里非常常见。</p>
+<h3 id="_9">常见表现<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>resmgr_attach()</code> 之后路径没有出现</li>
+<li><code>/dev/my_sensor</code> 不存在</li>
+<li>服务看起来活着，但节点就是没有</li>
+</ul>
+<h3 id="_10">第一反应该看什么<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
+<p>先看：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>ls<span class="w"> </span>-l<span class="w"> </span>/dev/my_sensor
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>cat<span class="w"> </span>/dev/secpolgenerate/errors
+</code></pre></div>
+<h3 id="_11">最常见的策略原因<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
+<p><code>allow_attach</code> 没写，或者写错了。</p>
+<p>例如你期望的是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>allow_attach my_sensor_srv_t /dev/my_sensor;
+</code></pre></div>
+<p>但实际可能出现：</p>
+<ul>
+<li>type 名不匹配</li>
+<li>路径写错</li>
+<li>你 attach 的真实路径和你想象的不一样</li>
+</ul>
+<h3 id="_12">你应该怎么想<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
+<p>这类问题要先确认三件事：</p>
+<ol>
+<li>进程是不是 <code>my_sensor_srv_t</code></li>
+<li>代码是不是真的在 attach <code>/dev/my_sensor</code></li>
+<li>策略里有没有对应 <code>allow_attach</code></li>
+</ol>
+<p>三者只要有一个对不上，路径就可能挂不出来。</p>
+<h2 id="5">5. 现象三：路径存在，但客户端访问失败<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>这类问题最容易误判成“文件权限问题”，但在用了 <code>secpol</code> 以后，常常是 channel 连接规则的问题。</p>
+<h3 id="_13">常见表现<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>/dev/my_sensor</code> 已经存在</li>
+<li>服务进程也活着</li>
+<li>但客户端 <code>open()</code>、<code>read()</code> 或连接动作失败</li>
+</ul>
+<h3 id="_14">优先检查什么<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h3>
+<p>先确认客户端和服务端分别是什么 type：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+</code></pre></div>
+<p>然后看策略里是否有类似规则：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>allow sensor_client_t my_sensor_srv_t : channel connect;
+</code></pre></div>
+<h3 id="_15">为什么会这样<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
+<p>前面几页已经提过一次，但这里再强调：</p>
+<ul>
+<li><code>allow_attach</code> 控制的是服务能不能把入口挂出来</li>
+<li><code>channel connect</code> 控制的是客户端能不能连服务</li>
+</ul>
+<p>所以“路径已经存在”并不等于“客户端一定能访问”。</p>
+<h3 id="_16">排查建议<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h3>
+<p>如果路径在、服务在，但客户端不通，优先怀疑：</p>
+<ul>
+<li>客户端 type 不对</li>
+<li>服务端 type 不对</li>
+<li>缺少 <code>channel connect</code> 规则</li>
+</ul>
+<p>不要上来就往 ability 上加。</p>
+<h2 id="6-errors-ability">6. 现象四：<code>errors</code> 里提示缺某个 ability<a class="headerlink" href="#6-errors-ability" title="Permanent link">&para;</a></h2>
+<p>这类问题是最典型的 <code>secpol</code> 排错场景。</p>
+<p>QNX 官方文档给的例子里，<code>/dev/secpolgenerate/errors</code> 可能直接出现类似：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>allow random_t self:ability {
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    io
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>};
+</code></pre></div>
+<p>这表示：</p>
+<ul>
+<li>以 <code>random_t</code> 运行的进程尝试使用了 <code>io</code> ability</li>
+<li>当前策略里没有允许它这样做</li>
+</ul>
+<h3 id="_17">但这里有一个很重要的判断<a class="headerlink" href="#_17" title="Permanent link">&para;</a></h3>
+<p>看到缺 ability，不代表你就应该立刻把它加回去。</p>
+<p>先问三个问题：</p>
+<ol>
+<li>这个进程是不是本来就跑错 type 了</li>
+<li>这个行为是不是真的业务需要</li>
+<li>能不能通过改启动方式、uid/gid、文件权限或程序行为，避免依赖这个 ability</li>
+</ol>
+<p>这点很重要，因为自动生成或报错提示出来的规则，只说明“它尝试用了”，不自动等于“最终设计就应该允许它一直用”。</p>
+<h2 id="7">7. 现象五：每次生成的策略都在变<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>这也是官方文档专门提到的一类现象。</p>
+<h3 id="_18">常见表现<a class="headerlink" href="#_18" title="Permanent link">&para;</a></h3>
+<ul>
+<li>每次跑完 <code>secpolgenerate</code>，策略都多出一点点新内容</li>
+<li>某些 subrange 看起来总在变</li>
+<li>很难得到稳定收敛的策略文件</li>
+</ul>
+<h3 id="_19">官方文档的解释方向<a class="headerlink" href="#_19" title="Permanent link">&para;</a></h3>
+<p>对某些 abilities，尤其和虚拟地址相关的 subrange，系统每次运行时可能都会生成新的范围。</p>
+<h3 id="_20">这类问题怎么理解<a class="headerlink" href="#_20" title="Permanent link">&para;</a></h3>
+<p>不要把“每次都多一点”简单理解成系统还没收敛。</p>
+<p>有时不是业务路径没覆盖，而是：</p>
+<ul>
+<li>某些范围本来就带运行时波动</li>
+<li>生成结果在形式上变化，但本质上是同一类权限需求</li>
+</ul>
+<h3 id="_21">文档建议方向<a class="headerlink" href="#_21" title="Permanent link">&para;</a></h3>
+<p>官方文档提到，一种处理思路是对受影响的 ability 去掉这些变化过强的 subrange，转而用更稳定的方式表达权限。</p>
+<p>这一步已经偏收敛优化，不属于最初 bring-up 阶段必须马上做的事。</p>
+<h2 id="8-errors">8. 现象六：<code>errors</code> 里有报错，但系统表面上没坏<a class="headerlink" href="#8-errors" title="Permanent link">&para;</a></h2>
+<p>QNX 官方文档也专门提醒了这一点：<strong>有些错误记录并不一定对应真实故障</strong>。</p>
+<p>例如某些和 <code>setuid</code>、<code>setgid</code>、<code>prot_exec</code>、<code>priority</code> 相关的检查，可能会在日志里留下错误痕迹，但表面上系统仍能继续工作。</p>
+<h3 id="_22">这意味着什么<a class="headerlink" href="#_22" title="Permanent link">&para;</a></h3>
+<p>不要把 <code>errors</code> 文件当成“每一条都必须无脑放行”的待办清单。</p>
+<p>更合理的做法是：</p>
+<ul>
+<li>先结合实际故障判断有没有真实影响</li>
+<li>再决定是修策略、修启动方式，还是暂时忽略</li>
+</ul>
+<h2 id="9-secure">9. 现象七：secure 模式启动后系统更早就坏掉<a class="headerlink" href="#9-secure" title="Permanent link">&para;</a></h2>
+<p>这通常发生在你从开发阶段切到真正受限模式之后。</p>
+<h3 id="_23">常见原因<a class="headerlink" href="#_23" title="Permanent link">&para;</a></h3>
+<ul>
+<li>生成策略时业务路径没有跑全</li>
+<li>启动顺序变了</li>
+<li>某些早期服务在 <code>secpolpush</code> 之后拿不到需要的权限</li>
+<li>某个长期服务其实没有显式 type</li>
+</ul>
+<h3 id="_24">先看哪里<a class="headerlink" href="#_24" title="Permanent link">&para;</a></h3>
+<p>优先看：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>cat<span class="w"> </span>/dev/secpolgenerate/errors
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+</code></pre></div>
+<p>如果系统坏得太早，连 <code>/dev/secpolgenerate/errors</code> 都拿不到，QNX 官方文档建议可以用：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>secpolgenerate<span class="w"> </span>-v
+</code></pre></div>
+<p>这样它会把错误输出到 <code>stderr</code>，适合系统还没完全起来时看更早阶段的问题。</p>
+<h2 id="10-secpol">10. 现象八：怀疑是文件权限，不确定是不是 secpol<a class="headerlink" href="#10-secpol" title="Permanent link">&para;</a></h2>
+<p>这类问题很容易混淆。</p>
+<p>QNX 官方文档专门提到，有些系统失败其实对 <code>secpolgenerate</code> 来说是“不可见”的。</p>
+<p>例如：</p>
+<ul>
+<li>资源管理器以 non-root 运行后，打开某些文件失败</li>
+<li>失败原因其实是文件权限、owner、ACL 不对</li>
+<li>但你直觉上会误以为是少了某个 security policy rule</li>
+</ul>
+<h3 id="_25">怎么区分<a class="headerlink" href="#_25" title="Permanent link">&para;</a></h3>
+<p>如果你发现：</p>
+<ul>
+<li>服务 type 看起来对</li>
+<li>attach / connect 规则也齐</li>
+<li>但某些文件或设备访问仍然失败</li>
+</ul>
+<p>那就要开始怀疑：</p>
+<ul>
+<li>传统文件权限</li>
+<li>uid/gid 配置</li>
+<li>设备节点权限</li>
+<li>ACL</li>
+</ul>
+<p>这类问题未必能靠继续加 ability 正确解决。</p>
+<h2 id="11">11. 一个推荐的排错动作模板<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
+<p>当你遇到一个具体故障时，可以按这个顺序走。</p>
+<h3 id="_26">第一步：记录现象<a class="headerlink" href="#_26" title="Permanent link">&para;</a></h3>
+<p>先写清楚到底是哪种失败：</p>
+<ul>
+<li>进程起不来</li>
+<li>路径挂不上</li>
+<li>客户端连不上</li>
+<li>某个特权操作失败</li>
+</ul>
+<h3 id="type">第二步：记录当前 type<a class="headerlink" href="#type" title="Permanent link">&para;</a></h3>
+<p>命令：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+</code></pre></div>
+<p>重点记录：</p>
+<ul>
+<li>服务端 type</li>
+<li>客户端 type</li>
+<li>是否有 <code>__run</code></li>
+</ul>
+<h3 id="errors">第三步：看 <code>errors</code><a class="headerlink" href="#errors" title="Permanent link">&para;</a></h3>
+<p>命令：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cat<span class="w"> </span>/dev/secpolgenerate/errors
+</code></pre></div>
+<p>重点记录：</p>
+<ul>
+<li>报的是 <code>ability</code></li>
+<li>还是 <code>attach</code></li>
+<li>还是其他安全事件</li>
+</ul>
+<h3 id="_27">第四步：看策略文本<a class="headerlink" href="#_27" title="Permanent link">&para;</a></h3>
+<p>命令：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cat<span class="w"> </span>/dev/secpolgenerate/policy
+</code></pre></div>
+<p>重点确认：</p>
+<ul>
+<li>有没有生成预期 type</li>
+<li>有没有生成预期 <code>allow_attach</code></li>
+<li>有没有生成预期 <code>channel connect</code></li>
+</ul>
+<h3 id="_28">第五步：必要时开实时监控<a class="headerlink" href="#_28" title="Permanent link">&para;</a></h3>
+<p>命令：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>secpolmonitor<span class="w"> </span>-a<span class="w"> </span>-p
+</code></pre></div>
+<p>如果只想盯一个服务：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>secpolmonitor<span class="w"> </span>-a<span class="w"> </span>-p<span class="w"> </span>-f<span class="w"> </span>my_sensor_srv
+</code></pre></div>
+<h2 id="12">12. 一个适合你后面补真实输出的排错记录模板<a class="headerlink" href="#12" title="Permanent link">&para;</a></h2>
+<p>你后续可以直接按这个格式补真实案例。</p>
+<h3 id="_29">故障现象<a class="headerlink" href="#_29" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a># 例如：/dev/my_sensor 没有出现
+</code></pre></div>
+<h3 id="_30">相关命令<a class="headerlink" href="#_30" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>ls<span class="w"> </span>-l<span class="w"> </span>/dev/my_sensor
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>cat<span class="w"> </span>/dev/secpolgenerate/errors
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>cat<span class="w"> </span>/dev/secpolgenerate/policy
+</code></pre></div>
+<h3 id="_31">实际输出<a class="headerlink" href="#_31" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a># 后续补真实输出
+</code></pre></div>
+<h3 id="_32">初步判断<a class="headerlink" href="#_32" title="Permanent link">&para;</a></h3>
+<ul>
+<li>进程 type 是否正确</li>
+<li>是否缺 <code>allow_attach</code></li>
+<li>是否缺 <code>channel connect</code></li>
+<li>是否是文件权限/uid/gid 问题</li>
+</ul>
+<h3 id="_33">修正动作<a class="headerlink" href="#_33" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a># 后续补你自己的修改动作
+</code></pre></div>
+<h3 id="_34">结果验证<a class="headerlink" href="#_34" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a># 后续补验证结果
+</code></pre></div>
+<h2 id="13">13. 这一页最该记住的几点<a class="headerlink" href="#13" title="Permanent link">&para;</a></h2>
+<ul>
+<li>先看 <code>type</code>，再看 attach/connect，最后再看 ability。</li>
+<li><code>/dev/secpolgenerate/errors</code> 是排错第一入口。</li>
+<li><code>allow_attach</code> 和 <code>channel connect</code> 是两层不同控制。</li>
+<li><code>errors</code> 里的建议规则不等于最终都应该直接放行。</li>
+<li>有些问题本质上是 uid/gid、文件权限或 ACL，而不只是 <code>secpol</code> 规则缺失。</li>
+</ul>
+<h2 id="_35">参考资料<a class="headerlink" href="#_35" title="Permanent link">&para;</a></h2>
+<p>以下内容主要基于 QNX 官方文档整理：</p>
+<ul>
+<li>QNX SDP 8.0 System Security Guide: Troubleshooting and frequently asked questions<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/troubleshooting.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/troubleshooting.html</a></li>
+<li>QNX SDP 8.0 System Security Guide: The error file<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/debugging.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/debugging.html</a></li>
+<li>QNX SDP 8.0 Utilities Reference: <code>secpolgenerate</code><br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/s/secpolgenerate.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/s/secpolgenerate.html</a></li>
+<li>QNX SDP 8.0 Utilities Reference: <code>secpolmonitor</code><br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/s/secpolmonitor.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/s/secpolmonitor.html</a></li>
+<li>QNX SDP 8.0 System Security Guide: System monitoring using secpolgenerate<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/using_secpolgenerate_secure_system.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/using_secpolgenerate_secure_system.html</a></li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../secpol-resource-manager-example/" class="btn btn-neutral float-left" title="Resource Manager 的 secpol 示例"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../debug/crash-debugging/" class="btn btn-neutral float-right" title="Crash 调试">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/SwartzMss/QNX_Helper" class="fa fa-code-fork" style="color: #fcfcfc"> QNX_Helper</a>
+        </span>
+    
+    
+      <span><a href="../secpol-resource-manager-example/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../debug/crash-debugging/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

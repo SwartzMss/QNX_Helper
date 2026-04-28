@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://swartzmss.github.io/QNX_Helper/security/secpol-resource-manager-example/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Resource Manager 的 secpol 示例 - QNX Helper</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../stylesheets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Resource Manager \u7684 secpol \u793a\u4f8b";
+        var mkdocs_page_input_path = "security/secpol-resource-manager-example.md";
+        var mkdocs_page_url = "/QNX_Helper/security/secpol-resource-manager-example/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> QNX Helper
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/overview/">QNX 简介</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/qnx-vs-linux/">QNX 和 Linux 的区别</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/setup/">环境搭建</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../commands/common-commands/">常用命令</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol/">安全策略（secpol）</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol-policy-example/">secpol 策略语言与示例</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Resource Manager 的 secpol 示例</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1-resource-manager-secpol">1. 先说结论：为什么 resource manager 特别适合配合 secpol</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2">2. 先假设一个小场景</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3">3. 这个场景里有哪些对象</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4">4. 启动链路要怎么对应</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_1">服务端启动</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_2">客户端启动</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5">5. 服务代码层面会发生什么</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6">6. 客户端为什么还需要单独的连接规则</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7">7. 一个最小策略骨架</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#8">8. 如果服务启动时需要更多权限怎么办</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#9">9. 一个更贴近真实工程的阅读顺序</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#attach">第一步：先看 attach 是否成功</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#connect">第二步：再看客户端能不能 connect</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#abilities">第三步：最后再查 abilities</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10-secpolgenerate">10. 对应 secpolgenerate 输出时怎么读</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#type">type</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#allow_attach">allow_attach</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#channel-connect">channel connect</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#selfability">self:ability</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#11-secpol_resmgr_attach">11. 如果用 secpol_resmgr_attach()，理解上有什么不同</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12">12. 一个适合你后面补真实输出的模板</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#resource-manager-devmy_sensor">场景：自定义 resource manager /dev/my_sensor</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_3">启动脚本</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_4">客户端启动</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_5">预期策略</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_6">实际命令</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_7">实际输出</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_8">观察点</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13">13. 这一页最该记住的几句话</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_9">参考资料</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../secpol-troubleshooting/">secpol 排错与检查清单</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../debug/crash-debugging/">Crash 调试</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">QNX Helper</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Resource Manager 的 secpol 示例</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/SwartzMss/QNX_Helper/edit/master/docs/security/secpol-resource-manager-example.md">Edit on QNX_Helper</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="resource-manager-secpol">Resource Manager 的 secpol 示例<a class="headerlink" href="#resource-manager-secpol" title="Permanent link">&para;</a></h1>
+<p>这一页不再只讲语法，而是把一个典型的 QNX <code>resource manager</code> 场景串起来。</p>
+<p>目标很明确：</p>
+<ul>
+<li>服务进程对外提供一个路径</li>
+<li>客户端去连接这个服务</li>
+<li>用 <code>secpol</code> 把“谁能 attach、谁能 connect、服务本身有哪些能力”拆开控制</li>
+</ul>
+<p>这类场景很适合 QNX，因为 <code>resource manager</code> 本来就是 QNX 里非常常见的系统服务组织方式。</p>
+<h2 id="1-resource-manager-secpol">1. 先说结论：为什么 resource manager 特别适合配合 secpol<a class="headerlink" href="#1-resource-manager-secpol" title="Permanent link">&para;</a></h2>
+<p>QNX 官方文档明确提到，安全策略不仅能控制进程 abilities，还能控制两件对 resource manager 很关键的事：</p>
+<ul>
+<li>它能在 path space 的什么位置调用 <code>resmgr_attach()</code></li>
+<li>哪些进程允许连接它公开的 channel</li>
+</ul>
+<p>这两点很重要，因为一个 resource manager 往往正好有两个对外暴露面：</p>
+<ul>
+<li>路径暴露面，例如 <code>/dev/mydev</code></li>
+<li>消息暴露面，也就是客户端对它 channel 的连接</li>
+</ul>
+<p>从这个角度看，<code>secpol</code> 其实非常适合给 resource manager 做边界收敛。</p>
+<h2 id="2">2. 先假设一个小场景<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>假设我们自己写了一个很简单的服务：</p>
+<ul>
+<li>服务名：<code>my_sensor_srv</code></li>
+<li>功能：对外提供一个设备节点 <code>/dev/my_sensor</code></li>
+<li>客户端：<code>sensor_client</code></li>
+<li>运行方式：服务开机自启，客户端按需启动</li>
+</ul>
+<p>这个例子不是为了模拟完整驱动，而是为了把策略关系讲清楚。</p>
+<h2 id="3">3. 这个场景里有哪些对象<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>最少可以先拆成两个 type：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>type my_sensor_srv_t;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>type sensor_client_t;
+</code></pre></div>
+<p>这两个 type 的职责分别是：</p>
+<ul>
+<li><code>my_sensor_srv_t</code>：服务端，负责 attach 路径、创建 channel、处理消息</li>
+<li><code>sensor_client_t</code>：客户端，负责连接服务并读写</li>
+</ul>
+<p>如果你后面还有日志代理、监控进程、测试程序，也可以继续拆 type，但不要在一开始把所有东西混成一个 <code>app_t</code>。</p>
+<h2 id="4">4. 启动链路要怎么对应<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="_1">服务端启动<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<p>如果服务是长期运行进程，启动时应该显式带 type，例如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>on<span class="w"> </span>-u<span class="w"> </span><span class="m">30</span>:30<span class="w"> </span>-T<span class="w"> </span>my_sensor_srv_t<span class="w"> </span>my_sensor_srv
+</code></pre></div>
+<h3 id="_2">客户端启动<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>如果客户端也属于长期存在的业务进程，同样建议显式带 type：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>on<span class="w"> </span>-u<span class="w"> </span><span class="m">31</span>:31<span class="w"> </span>-T<span class="w"> </span>sensor_client_t<span class="w"> </span>sensor_client
+</code></pre></div>
+<p>如果客户端只是短命测试程序，开发期可以先简化，但等进入收敛阶段时，最好还是给它明确归类。</p>
+<h2 id="5">5. 服务代码层面会发生什么<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>一个最典型的 resource manager，通常会做这些事：</p>
+<ol>
+<li><code>dispatch_create()</code></li>
+<li>初始化 <code>iofunc</code> / <code>resmgr</code> 结构</li>
+<li><code>resmgr_attach()</code> 把服务挂到某个路径</li>
+<li>进入 <code>dispatch_block()</code> / <code>dispatch_handler()</code> 循环</li>
+</ol>
+<p>如果路径是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>/dev/my_sensor
+</code></pre></div>
+<p>那从策略角度看，第一件必须明确的事就是：</p>
+<blockquote>
+<p><code>my_sensor_srv_t</code> 是否被允许 attach 到 <code>/dev/my_sensor</code></p>
+</blockquote>
+<p>所以最基本的一条规则通常会长这样：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>allow_attach my_sensor_srv_t /dev/my_sensor;
+</code></pre></div>
+<p>这个规则的含义非常直接：</p>
+<ul>
+<li>没有它，服务即使代码写对了，也可能 attach 失败</li>
+<li>有了它，也只是允许在这个路径上注册，不等于客户端自动就能访问</li>
+</ul>
+<h2 id="6">6. 客户端为什么还需要单独的连接规则<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<p>QNX 官方文档说明，channel 默认并不会自动对所有 type 开放。</p>
+<p>对 resource manager 来说，路径 attach 解决的是：</p>
+<ul>
+<li>服务能不能把入口挂出来</li>
+</ul>
+<p>而客户端访问还取决于：</p>
+<ul>
+<li>它能不能连接这个服务对应的 channel</li>
+</ul>
+<p>因此通常还需要一条类似规则：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>allow sensor_client_t my_sensor_srv_t : channel connect;
+</code></pre></div>
+<p>可以把它理解成：</p>
+<blockquote>
+<p>允许 <code>sensor_client_t</code> 类型的进程连接 <code>my_sensor_srv_t</code> 创建的公开通道。</p>
+</blockquote>
+<p>这也是为什么只写 <code>allow_attach</code> 还不够。一个服务“挂出来”与“谁能连它”是两层不同的控制。</p>
+<h2 id="7">7. 一个最小策略骨架<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>把上面的关系拼起来，一个教学型最小策略可以先写成这样：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>type my_sensor_srv_t;
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>type sensor_client_t;
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>allow_attach my_sensor_srv_t /dev/my_sensor;
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>allow sensor_client_t my_sensor_srv_t : channel connect;
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>allow my_sensor_srv_t self:ability {
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    nonroot
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>};
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>allow sensor_client_t self:ability {
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    nonroot
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>};
+</code></pre></div>
+<p>这个版本故意很小，只表达最关键的结构：</p>
+<ul>
+<li>服务类型</li>
+<li>客户端类型</li>
+<li>服务 attach 路径</li>
+<li>客户端连服务 channel</li>
+<li>两边都尽量非 root 运行</li>
+</ul>
+<p>它不是完整工程策略，但很适合做第一块可读骨架。</p>
+<h2 id="8">8. 如果服务启动时需要更多权限怎么办<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p>真实系统里，resource manager 往往在启动阶段需要的权限比稳定运行后更多。</p>
+<p>QNX 官方文档建议 resource manager 在初始化完成后尽量降权，常见思路包括：</p>
+<ul>
+<li>启动阶段临时拥有较高权限</li>
+<li>初始化完成后切换 type</li>
+<li>或者切到非 root uid/gid，并收窄 abilities</li>
+</ul>
+<p>也就是说，实际策略经常不是只有一个 <code>my_sensor_srv_t</code>，而可能还会出现过渡态，例如文档里提到的 <code>__run</code> 类型后缀场景。</p>
+<p>对你现在这个仓库阶段，先记住这个原则就够了：</p>
+<blockquote>
+<p>启动期需要什么，不等于运行期应该一直保留什么。</p>
+</blockquote>
+<h2 id="9">9. 一个更贴近真实工程的阅读顺序<a class="headerlink" href="#9" title="Permanent link">&para;</a></h2>
+<p>如果后面你真的写了一个 resource manager，我建议按这个顺序查策略问题。</p>
+<h3 id="attach">第一步：先看 attach 是否成功<a class="headerlink" href="#attach" title="Permanent link">&para;</a></h3>
+<p>先确认服务有没有真的把路径挂出来：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>ls<span class="w"> </span>-l<span class="w"> </span>/dev/my_sensor
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+</code></pre></div>
+<p>如果路径没出来，优先怀疑：</p>
+<ul>
+<li><code>resmgr_attach()</code> 代码本身有问题</li>
+<li>启动进程没按预期拿到 <code>my_sensor_srv_t</code></li>
+<li><code>allow_attach</code> 没写或写错</li>
+</ul>
+<h3 id="connect">第二步：再看客户端能不能 connect<a class="headerlink" href="#connect" title="Permanent link">&para;</a></h3>
+<p>如果路径已经存在，但客户端访问仍然失败，就重点怀疑 channel 连接规则。</p>
+<p>这时应该去看：</p>
+<ul>
+<li>客户端实际属于什么 type</li>
+<li>服务端实际属于什么 type</li>
+<li>是否存在：</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>allow sensor_client_t my_sensor_srv_t : channel connect;
+</code></pre></div>
+<h3 id="abilities">第三步：最后再查 abilities<a class="headerlink" href="#abilities" title="Permanent link">&para;</a></h3>
+<p>如果 attach 和 connect 都没问题，但服务内部某些操作失败，再去看 abilities 是否缺失或范围过窄。</p>
+<p>这是个重要顺序，因为很多人会过早怀疑 ability，结果真正的问题其实是：</p>
+<ul>
+<li>类型没分对</li>
+<li>attach 没放行</li>
+<li>connect 没放行</li>
+</ul>
+<h2 id="10-secpolgenerate">10. 对应 <code>secpolgenerate</code> 输出时怎么读<a class="headerlink" href="#10-secpolgenerate" title="Permanent link">&para;</a></h2>
+<p>如果你把系统跑起来，再导出：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cat<span class="w"> </span>/dev/secpolgenerate/policy
+</code></pre></div>
+<p>那你最可能看到的相关内容，通常会落在这几类：</p>
+<h3 id="type"><code>type</code><a class="headerlink" href="#type" title="Permanent link">&para;</a></h3>
+<p>比如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>type my_sensor_srv_t;
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>type sensor_client_t;
+</code></pre></div>
+<h3 id="allow_attach"><code>allow_attach</code><a class="headerlink" href="#allow_attach" title="Permanent link">&para;</a></h3>
+<p>比如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>allow_attach my_sensor_srv_t /dev/my_sensor;
+</code></pre></div>
+<h3 id="channel-connect">channel connect<a class="headerlink" href="#channel-connect" title="Permanent link">&para;</a></h3>
+<p>比如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>allow sensor_client_t my_sensor_srv_t : channel connect;
+</code></pre></div>
+<h3 id="selfability">self:ability<a class="headerlink" href="#selfability" title="Permanent link">&para;</a></h3>
+<p>比如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>allow my_sensor_srv_t self:ability {
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    ...
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>};
+</code></pre></div>
+<p>你真正要做的，不是看见这些规则就照单全收，而是逐条问：</p>
+<ul>
+<li>这条规则是不是业务真正需要的</li>
+<li>范围是不是过宽</li>
+<li>这个 type 是不是划分得合理</li>
+</ul>
+<h2 id="11-secpol_resmgr_attach">11. 如果用 <code>secpol_resmgr_attach()</code>，理解上有什么不同<a class="headerlink" href="#11-secpol_resmgr_attach" title="Permanent link">&para;</a></h2>
+<p>QNX 官方还提供了 <code>secpol_resmgr_attach()</code>。它和 <code>resmgr_attach()</code> 的核心用途相同，但还能根据安全策略设置权限、属主和 ACL。</p>
+<p>这意味着对某些资源管理器来说，策略不只是“允不允许 attach”，还可以进一步参与 mount point 的权限属性设定。</p>
+<p>这里我做一个明确区分：</p>
+<ul>
+<li>这是官方能力</li>
+<li>但你当前仓库阶段未必需要一上来就引入</li>
+</ul>
+<p>更稳妥的学习顺序通常是：</p>
+<ol>
+<li>先理解 <code>resmgr_attach()</code> 与 <code>allow_attach</code></li>
+<li>再理解 <code>channel connect</code></li>
+<li>最后再看 <code>secpol_resmgr_attach()</code> 这种更进一步的集成方式</li>
+</ol>
+<h2 id="12">12. 一个适合你后面补真实输出的模板<a class="headerlink" href="#12" title="Permanent link">&para;</a></h2>
+<p>你可以直接把下面这一段复制改造成你自己的实战记录。</p>
+<h3 id="resource-manager-devmy_sensor">场景：自定义 resource manager <code>/dev/my_sensor</code><a class="headerlink" href="#resource-manager-devmy_sensor" title="Permanent link">&para;</a></h3>
+<h3 id="_3">启动脚本<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>secpolpush
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>on<span class="w"> </span>-u<span class="w"> </span><span class="m">30</span>:30<span class="w"> </span>-T<span class="w"> </span>my_sensor_srv_t<span class="w"> </span>my_sensor_srv
+</code></pre></div>
+<h3 id="_4">客户端启动<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>on<span class="w"> </span>-u<span class="w"> </span><span class="m">31</span>:31<span class="w"> </span>-T<span class="w"> </span>sensor_client_t<span class="w"> </span>sensor_client
+</code></pre></div>
+<h3 id="_5">预期策略<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>type my_sensor_srv_t;
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>type sensor_client_t;
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>allow_attach my_sensor_srv_t /dev/my_sensor;
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>allow sensor_client_t my_sensor_srv_t : channel connect;
+</code></pre></div>
+<h3 id="_6">实际命令<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>pidin<span class="w"> </span>-f<span class="w"> </span>a_n
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>cat<span class="w"> </span>/dev/secpolgenerate/policy
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>secpol<span class="w"> </span>-c
+</code></pre></div>
+<h3 id="_7">实际输出<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a># 后续补你自己的真实输出
+</code></pre></div>
+<h3 id="_8">观察点<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li>服务是否真的以 <code>my_sensor_srv_t</code> 启动</li>
+<li><code>/dev/my_sensor</code> 是否真的出现</li>
+<li>客户端是否属于预期 type</li>
+<li>自动生成的规则是否比预期更宽</li>
+</ul>
+<h2 id="13">13. 这一页最该记住的几句话<a class="headerlink" href="#13" title="Permanent link">&para;</a></h2>
+<ul>
+<li>对 resource manager 来说，<code>allow_attach</code> 和 <code>channel connect</code> 是两层不同的控制。</li>
+<li>服务能挂出来，不代表所有客户端都能连。</li>
+<li>把长期服务拆成独立 type，收益通常远大于一开始就纠结零碎 ability。</li>
+<li>启动期权限和运行期权限要分开看。</li>
+<li>自动生成策略是起点，不是最终答案。</li>
+</ul>
+<h2 id="_9">参考资料<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
+<p>以下内容主要基于 QNX 官方文档整理：</p>
+<ul>
+<li>QNX SDP 8.0 System Security Guide: Security policies<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/security_policies.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/security_policies.html</a></li>
+<li>QNX SDP 8.0 System Security Guide: Security policy language<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/secpol_language.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/secpol_language.html</a></li>
+<li>QNX SDP 8.0 System Security Guide: Implementing security policies<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/using_security_policies.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/using_security_policies.html</a></li>
+<li>QNX SDP 8.0 C Library Reference: <code>resmgr_attach()</code><br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.lib_ref/topic/r/resmgr_attach.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.lib_ref/topic/r/resmgr_attach.html</a></li>
+<li>QNX SDP 8.0 System Security Guide: <code>secpol_resmgr_attach()</code><br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/secpol_resmgr_attach.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/secpol_resmgr_attach.html</a></li>
+<li>QNX SDP 8.0 System Security Guide: Initialization<br />
+<a href="https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/initialization.html">https://www.qnx.com/developers/docs/8.0/com.qnx.doc.security.system/topic/manual/initialization.html</a></li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../secpol-policy-example/" class="btn btn-neutral float-left" title="secpol 策略语言与示例"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../secpol-troubleshooting/" class="btn btn-neutral float-right" title="secpol 排错与检查清单">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/SwartzMss/QNX_Helper" class="fa fa-code-fork" style="color: #fcfcfc"> QNX_Helper</a>
+        </span>
+    
+    
+      <span><a href="../secpol-policy-example/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../secpol-troubleshooting/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

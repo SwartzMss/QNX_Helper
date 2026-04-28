@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://swartzmss.github.io/QNX_Helper/debug/crash-debugging/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Crash 调试 - QNX Helper</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../stylesheets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Crash \u8c03\u8bd5";
+        var mkdocs_page_input_path = "debug/crash-debugging.md";
+        var mkdocs_page_url = "/QNX_Helper/debug/crash-debugging/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> QNX Helper
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/overview/">QNX 简介</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/qnx-vs-linux/">QNX 和 Linux 的区别</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../getting-started/setup/">环境搭建</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../commands/common-commands/">常用命令</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol/">安全策略（secpol）</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-policy-example/">secpol 策略语言与示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-resource-manager-example/">Resource Manager 的 secpol 示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-troubleshooting/">secpol 排错与检查清单</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Crash 调试</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1-crash">1. 最小 crash 示例</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2">2. 前置检查</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-core">3. 当前这台板子的默认 core 生成行为</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-dumper">4. 如果想固定输出目录，再重启 dumper</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5-crash-core">5. crash 后确认 core 是否生成</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6-core">6. 手工导出指定进程的 core</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7-procdumper">7. 通过 /proc/dumper 主动触发</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#8">8. 一起保存哪些文件</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#9-core-root">9. 如果 core 属于 root，先提升权限再处理</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10-core-target-host">10. 把 core 从 target 拷回 host</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#11-host-coreinfo">11. 先在 Host 上用 coreinfo</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12-host-core">12. 在 Host 上分析 core</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13-ntoaarch64-gdb-core">13. 用 ntoaarch64-gdb 解析 core</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#14">14. 一套最小流程</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#target">target</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#host">host 分析</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#gdb">GDB 内</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#15">15. 常见检查点</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">QNX Helper</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Crash 调试</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/SwartzMss/QNX_Helper/edit/master/docs/debug/crash-debugging.md">Edit on QNX_Helper</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="crash">Crash 调试<a class="headerlink" href="#crash" title="Permanent link">&para;</a></h1>
+<h2 id="1-crash">1. 最小 crash 示例<a class="headerlink" href="#1-crash" title="Permanent link">&para;</a></h2>
+<p>先准备一个最小示例程序，用来验证 crash、core 生成和后续分析流程。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;about to crash</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>保存为 <code>crash_demo.c</code>，然后在 Host 上编译：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>qcc<span class="w"> </span>-g<span class="w"> </span>-Vgcc_ntoaarch64le<span class="w"> </span>crash_demo.c<span class="w"> </span>-o<span class="w"> </span>crash_demo
+</code></pre></div>
+<p>这里建议带上 <code>-g</code>，这样后面用 GDB 分析 core 时可以看到更完整的符号信息。</p>
+<p>把程序传到 Target：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>scp<span class="w"> </span>crash_demo<span class="w"> </span>qnxuser@192.168.3.153:/tmp/
+</code></pre></div>
+<p>在 Target 上运行：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">cd</span><span class="w"> </span>/tmp
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>chmod<span class="w"> </span>+x<span class="w"> </span>crash_demo
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./crash_demo
+</code></pre></div>
+<p>这个程序会稳定触发一次空指针写入，用来验证：</p>
+<ul>
+<li>crash 现场输出</li>
+<li>core 是否生成</li>
+<li><code>coreinfo</code> 是否能读</li>
+<li><code>ntoaarch64-gdb</code> 是否能正常解析</li>
+</ul>
+<h2 id="2">2. 前置检查<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>先确认 target 上有没有 <code>dumper</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>which<span class="w"> </span>dumper
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>pidin<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>dumper
+</code></pre></div>
+<p>如果 <code>pidin | grep dumper</code> 没输出，就手工启动。</p>
+<p>当前这台 Raspberry Pi 5 的实际结果：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$<span class="w"> </span>which<span class="w"> </span>dumper
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>/usr/sbin/dumper
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$<span class="w"> </span>pidin<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>dumper
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">   </span><span class="m">20484</span><span class="w">   </span><span class="m">1</span><span class="w"> </span>usr/sbin/dumper<span class="w">               </span>10r<span class="w"> </span>RECEIVE<span class="w">        </span><span class="m">1</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">   </span><span class="m">20484</span><span class="w">   </span><span class="m">2</span><span class="w"> </span>usr/sbin/dumper<span class="w">               </span>10r<span class="w"> </span>RECEIVE<span class="w">        </span><span class="m">2</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>$<span class="w"> </span>ls<span class="w"> </span>-l<span class="w"> </span>/proc/dumper
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>nrw-r-----<span class="w">  </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">1970</span>-01-01<span class="w"> </span><span class="m">22</span>:20<span class="w"> </span>/proc/dumper
+</code></pre></div>
+<p>这说明当前系统里：</p>
+<ul>
+<li><code>dumper</code> 已经安装，路径是 <code>/usr/sbin/dumper</code></li>
+<li><code>dumper</code> 已经在后台运行</li>
+<li><code>/proc/dumper</code> 控制入口也存在</li>
+</ul>
+<p>这里的 <code>dumper</code> 可以理解成：</p>
+<p>QNX 里专门负责接收进程 crash 事件并生成 core 文件的后台服务进程。</p>
+<p>它主要负责三件事：</p>
+<ol>
+<li>程序 crash 后接管现场并生成 core</li>
+<li>响应手工 dump 请求</li>
+<li>管理 core 的输出目录和命名方式</li>
+</ol>
+<p><code>RECEIVE</code> 是正常状态，表示它正在后台等待请求，不是异常。</p>
+<p>当前还额外确认到一件事：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>$<span class="w"> </span>cat<span class="w"> </span>/proc/20484/cmdline
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>dumper
+</code></pre></div>
+<p>这说明当前 <code>dumper</code> 看起来是默认参数启动，没有额外带 <code>-d</code> 之类的目录参数。</p>
+<h2 id="3-core">3. 当前这台板子的默认 core 生成行为<a class="headerlink" href="#3-core" title="Permanent link">&para;</a></h2>
+<p>在这台 Raspberry Pi 5 上，实际验证结果是：</p>
+<ul>
+<li>不需要先手工创建 <code>/var/dumps</code></li>
+<li>程序 crash 后，core 会直接生成在当前用户的默认目录里</li>
+</ul>
+<p>最小示例实际输出：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>$<span class="w"> </span>./crash_demo
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>about<span class="w"> </span>to<span class="w"> </span>crash
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>Process<span class="w"> </span><span class="m">50257946</span><span class="w"> </span><span class="o">(</span>crash_demo<span class="o">)</span><span class="w"> </span>terminated<span class="w"> </span>SIGSEGV<span class="w"> </span><span class="nv">code</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">fltno</span><span class="o">=</span><span class="m">11</span><span class="w"> </span><span class="nv">ip</span><span class="o">=</span>0000001e6272e7f4<span class="w"> </span><span class="nv">mapaddr</span><span class="o">=</span>00000000000007f4<span class="w"> </span><span class="nv">ref</span><span class="o">=</span><span class="m">0000000000000000</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>Memory<span class="w"> </span>fault<span class="w"> </span><span class="o">(</span>core<span class="w"> </span>dumped<span class="o">)</span>
+</code></pre></div>
+<p>然后直接可以看到：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$<span class="w"> </span>ls
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>crash_demo<span class="w">  </span>crash_demo.core<span class="w">  </span>fs9<span class="w">  </span>pci<span class="w">  </span>slogger2<span class="w">  </span>ssh_host_ecdsa_key<span class="w">  </span>ssh_host_ecdsa_key.pub<span class="w">  </span>ssh_host_ed25519_key<span class="w">  </span>ssh_host_ed25519_key.pub<span class="w">  </span>ssh_host_rsa_key<span class="w">  </span>ssh_host_rsa_key.pub<span class="w">  </span>sshd_config
+</code></pre></div>
+<p>以及：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>$<span class="w"> </span>ls<span class="w"> </span>-lt<span class="w"> </span>crash_demo*
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>-rw-------<span class="w">  </span><span class="m">2</span><span class="w"> </span>root<span class="w">    </span>root<span class="w">    </span><span class="m">1630208</span><span class="w"> </span><span class="m">1970</span>-01-02<span class="w"> </span><span class="m">19</span>:58<span class="w"> </span>crash_demo.core
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>-rwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span>qnxuser<span class="w"> </span>qnxuser<span class="w">   </span><span class="m">10184</span><span class="w"> </span><span class="m">1970</span>-01-02<span class="w"> </span><span class="m">19</span>:57<span class="w"> </span>crash_demo
+</code></pre></div>
+<h2 id="4-dumper">4. 如果想固定输出目录，再重启 <code>dumper</code><a class="headerlink" href="#4-dumper" title="Permanent link">&para;</a></h2>
+<p>如果你不想让 core 落在默认位置，而是想统一保存到固定目录，例如 <code>/var/dumps</code>，这时才需要手工指定。</p>
+<p>先准备 core 目录：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/dumps
+</code></pre></div>
+<p>启动：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>dumper<span class="w"> </span>-d<span class="w"> </span>/var/dumps<span class="w"> </span>-u<span class="w"> </span><span class="p">&amp;</span>
+</code></pre></div>
+<p>常用变体：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>dumper<span class="w"> </span>-d<span class="w"> </span>/var/dumps<span class="w"> </span>-n<span class="w"> </span><span class="p">&amp;</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>dumper<span class="w"> </span>-d<span class="w"> </span>/var/dumps<span class="w"> </span>-N<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="p">&amp;</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>dumper<span class="w"> </span>-v<span class="w"> </span>-d<span class="w"> </span>/var/dumps<span class="w"> </span>-u<span class="w"> </span><span class="p">&amp;</span>
+</code></pre></div>
+<p>含义：</p>
+<ul>
+<li><code>-d /var/dumps</code>：指定 core 输出目录</li>
+<li><code>-u</code>：文件名带时间戳</li>
+<li><code>-n</code>：顺序编号</li>
+<li><code>-N 10</code>：最多保留 10 份</li>
+<li><code>-v</code>：显示详细输出</li>
+</ul>
+<p>如果像当前这台板子一样，<code>dumper</code> 已经在后台运行，就不要重复起多个实例。先确认它当前的启动方式，再决定是否需要重启并带上新的参数。</p>
+<h2 id="5-crash-core">5. crash 后确认 core 是否生成<a class="headerlink" href="#5-crash-core" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>ls<span class="w"> </span>-l
+</code></pre></div>
+<p>常见文件名：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>app.core
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>app-YYYYMMDD_HHMMSS_MSEC.core
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>app.1.core
+</code></pre></div>
+<p>如果没有 core：</p>
+<ol>
+<li>先确认 <code>dumper</code> 是否真的在跑</li>
+<li>先在当前目录、当前用户目录和 <code>/tmp</code> 里找</li>
+<li>如果你自己给 <code>dumper</code> 指定过 <code>-d</code>，再去对应目录找</li>
+<li>再考虑是否需要重启 <code>dumper</code></li>
+</ol>
+<h2 id="6-core">6. 手工导出指定进程的 core<a class="headerlink" href="#6-core" title="Permanent link">&para;</a></h2>
+<p>先查进程号：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>pidin<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>app
+</code></pre></div>
+<p>然后导出：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>dumper<span class="w"> </span>-p<span class="w"> </span><span class="m">1234</span>
+</code></pre></div>
+<p>这个命令适合：</p>
+<ul>
+<li>程序还没 crash，但想先抓现场</li>
+<li>想先验证 dump 流程是否正常</li>
+</ul>
+<h2 id="7-procdumper">7. 通过 <code>/proc/dumper</code> 主动触发<a class="headerlink" href="#7-procdumper" title="Permanent link">&para;</a></h2>
+<p>如果你想用 <code>/proc/dumper</code> 这种方式，才需要重新带 <code>-a</code> 启动：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>dumper<span class="w"> </span>-a<span class="w"> </span>-d<span class="w"> </span>/var/dumps<span class="w"> </span>-u<span class="w"> </span><span class="p">&amp;</span>
+</code></pre></div>
+<p>再触发：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">echo</span><span class="w"> </span><span class="m">1234</span><span class="w"> </span>&gt;<span class="w"> </span>/proc/dumper
+</code></pre></div>
+<h2 id="8">8. 一起保存哪些文件<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p>至少一起保存：</p>
+<ul>
+<li>core 文件</li>
+<li>当时运行的可执行文件</li>
+<li>对应版本的符号文件</li>
+<li>相关日志</li>
+</ul>
+<p>不要只拿 <code>core</code>。</p>
+<h2 id="9-core-root">9. 如果 core 属于 <code>root</code>，先提升权限再处理<a class="headerlink" href="#9-core-root" title="Permanent link">&para;</a></h2>
+<p>当前这台板子的实际情况里，<code>crash_demo.core</code> 是这样生成的：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>$<span class="w"> </span>ls<span class="w"> </span>-lt<span class="w"> </span>crash_demo*
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>-rw-------<span class="w">  </span><span class="m">2</span><span class="w"> </span>root<span class="w">    </span>root<span class="w">    </span><span class="m">1630208</span><span class="w"> </span><span class="m">1970</span>-01-02<span class="w"> </span><span class="m">19</span>:58<span class="w"> </span>crash_demo.core
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>-rwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span>qnxuser<span class="w"> </span>qnxuser<span class="w">   </span><span class="m">10184</span><span class="w"> </span><span class="m">1970</span>-01-02<span class="w"> </span><span class="m">19</span>:57<span class="w"> </span>crash_demo
+</code></pre></div>
+<p>这意味着普通用户 <code>qnxuser</code> 不能直接：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/tmp/crash_demo.core<span class="w"> </span>./
+</code></pre></div>
+<p>也不能直接：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>/tmp/crash_demo.core
+</code></pre></div>
+<p>因为文件属主是 <code>root:root</code>。</p>
+<p>先切到高权限用户：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>su
+</code></pre></div>
+<p>或者：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>su<span class="w"> </span>root
+</code></pre></div>
+<p>切过去以后，可以直接改权限：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>/tmp/crash_demo.core
+</code></pre></div>
+<p>或者改属主再保留更严格的权限：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>chown<span class="w"> </span>qnxuser:qnxuser<span class="w"> </span>/tmp/crash_demo.core
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>/tmp/crash_demo.core
+</code></pre></div>
+<p>如果你不想动原文件，也可以复制一份给普通用户读取：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>cp<span class="w"> </span>/tmp/crash_demo.core<span class="w"> </span>/tmp/crash_demo_copy.core
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>chown<span class="w"> </span>qnxuser:qnxuser<span class="w"> </span>/tmp/crash_demo_copy.core
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>/tmp/crash_demo_copy.core
+</code></pre></div>
+<h2 id="10-core-target-host">10. 把 core 从 target 拷回 host<a class="headerlink" href="#10-core-target-host" title="Permanent link">&para;</a></h2>
+<p>例如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/path/to/app.core<span class="w"> </span>.
+</code></pre></div>
+<p>如果程序文件也在 target 上，也一起拷回：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/path/to/app<span class="w"> </span>.
+</code></pre></div>
+<p>对于最小示例，就是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/tmp/crash_demo.core<span class="w"> </span>./
+</code></pre></div>
+<p>如果你是先复制了一份普通用户可读的文件，就改成：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/tmp/crash_demo_copy.core<span class="w"> </span>./
+</code></pre></div>
+<h2 id="11-host-coreinfo">11. 先在 Host 上用 <code>coreinfo</code><a class="headerlink" href="#11-host-coreinfo" title="Permanent link">&para;</a></h2>
+<p>先确认 core 内容对不对：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>coreinfo<span class="w"> </span>-i<span class="w"> </span>./app.core
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>coreinfo<span class="w"> </span>-t<span class="w"> </span>./app.core
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>coreinfo<span class="w"> </span>-m<span class="w"> </span>./app.core
+<a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a>coreinfo<span class="w"> </span>-s<span class="w"> </span>./app.core
+</code></pre></div>
+<p>常用目的：</p>
+<ul>
+<li><code>-i</code>：看进程基本信息</li>
+<li><code>-t</code>：看线程信息</li>
+<li><code>-m</code>：看内存映射</li>
+<li><code>-s</code>：看系统信息</li>
+</ul>
+<p>当前这套环境里，<code>coreinfo</code> 是在 Host 上执行的：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>$<span class="w"> </span>which<span class="w"> </span>coreinfo
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>/home/swartz/qnx800/host/linux/x86_64/usr/bin/coreinfo
+</code></pre></div>
+<p>实际示例：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>$<span class="w"> </span>coreinfo<span class="w"> </span>crash_demo.core
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>crash_demo.core:
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="w"> </span><span class="nv">processor</span><span class="o">=</span>ARM<span class="w"> </span>AArch64<span class="w"> </span><span class="nv">num_cpus</span><span class="o">=</span><span class="m">4</span>
+<a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="w">  </span>cpu<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="nv">cpu</span><span class="o">=</span><span class="m">1095749809</span><span class="w"> </span><span class="nv">name</span><span class="o">=</span>Cortex-A76<span class="w"> </span><span class="nv">speed</span><span class="o">=</span><span class="m">2400</span>
+<a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a><span class="w">   </span><span class="nv">flags</span><span class="o">=</span>0x000000c0f08c7a<span class="w"> </span>FPU<span class="w"> </span>MMU
+<a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a><span class="w">  </span>cpu<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="nv">cpu</span><span class="o">=</span><span class="m">1095749809</span><span class="w"> </span><span class="nv">name</span><span class="o">=</span>Cortex-A76<span class="w"> </span><span class="nv">speed</span><span class="o">=</span><span class="m">2400</span>
+<a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a><span class="w">   </span><span class="nv">flags</span><span class="o">=</span>0x000000c0f08c7a<span class="w"> </span>FPU<span class="w"> </span>MMU
+<a id="__codelineno-35-8" name="__codelineno-35-8" href="#__codelineno-35-8"></a><span class="w">  </span>cpu<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="nv">cpu</span><span class="o">=</span><span class="m">1095749809</span><span class="w"> </span><span class="nv">name</span><span class="o">=</span>Cortex-A76<span class="w"> </span><span class="nv">speed</span><span class="o">=</span><span class="m">2400</span>
+<a id="__codelineno-35-9" name="__codelineno-35-9" href="#__codelineno-35-9"></a><span class="w">   </span><span class="nv">flags</span><span class="o">=</span>0x000000c0f08c7a<span class="w"> </span>FPU<span class="w"> </span>MMU
+<a id="__codelineno-35-10" name="__codelineno-35-10" href="#__codelineno-35-10"></a><span class="w">  </span>cpu<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="nv">cpu</span><span class="o">=</span><span class="m">1095749809</span><span class="w"> </span><span class="nv">name</span><span class="o">=</span>Cortex-A76<span class="w"> </span><span class="nv">speed</span><span class="o">=</span><span class="m">2400</span>
+<a id="__codelineno-35-11" name="__codelineno-35-11" href="#__codelineno-35-11"></a><span class="w">   </span><span class="nv">flags</span><span class="o">=</span>0x000000c0f08c7a<span class="w"> </span>FPU<span class="w"> </span>MMU
+<a id="__codelineno-35-12" name="__codelineno-35-12" href="#__codelineno-35-12"></a><span class="w"> </span>cyc/sec<span class="o">=</span><span class="m">54000000</span><span class="w"> </span><span class="nv">tod_adj</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">inc</span><span class="o">=</span><span class="m">1000000</span>
+<a id="__codelineno-35-13" name="__codelineno-35-13" href="#__codelineno-35-13"></a><span class="w"> </span><span class="nv">boot</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">epoch</span><span class="o">=</span><span class="m">1970</span><span class="w"> </span><span class="nv">intr</span><span class="o">=</span><span class="m">27</span>
+<a id="__codelineno-35-14" name="__codelineno-35-14" href="#__codelineno-35-14"></a><span class="w"> </span><span class="nv">period</span><span class="o">=</span><span class="m">1851851851</span><span class="w"> </span><span class="nv">scale</span><span class="o">=</span>-17<span class="w"> </span><span class="nv">load_max</span><span class="o">=</span><span class="m">18446744073709551615</span>
+<a id="__codelineno-35-15" name="__codelineno-35-15" href="#__codelineno-35-15"></a><span class="w">   </span><span class="nv">MACHINE</span><span class="o">=</span><span class="s2">&quot;RaspberryPi5&quot;</span><span class="w"> </span><span class="nv">HW_PROVIDER</span><span class="o">=</span><span class="s2">&quot;Sony UK&quot;</span><span class="w"> </span><span class="nv">ARCHITECTURE</span><span class="o">=</span><span class="s2">&quot;BCM2712&quot;</span>
+<a id="__codelineno-35-16" name="__codelineno-35-16" href="#__codelineno-35-16"></a><span class="w">   </span><span class="nv">HW_SERIAL</span><span class="o">=</span><span class="s2">&quot;48498aabcbc5c4e4&quot;</span><span class="w"> </span><span class="nv">HOSTNAME</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span>
+<a id="__codelineno-35-17" name="__codelineno-35-17" href="#__codelineno-35-17"></a><span class="w"> </span><span class="nv">pid</span><span class="o">=</span><span class="m">50257946</span><span class="w"> </span><span class="nv">parent</span><span class="o">=</span><span class="m">49680409</span><span class="w"> </span><span class="nv">child</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">pgrp</span><span class="o">=</span><span class="m">50257946</span><span class="w"> </span><span class="nv">sid</span><span class="o">=</span><span class="m">49680409</span>
+<a id="__codelineno-35-18" name="__codelineno-35-18" href="#__codelineno-35-18"></a><span class="w"> </span><span class="nv">flags</span><span class="o">=</span>0x59002400<span class="w"> </span><span class="nv">umask</span><span class="o">=</span><span class="m">022</span><span class="w"> </span><span class="nv">base_addr</span><span class="o">=</span>0x1e6272e000<span class="w"> </span><span class="nv">init_stack</span><span class="o">=</span>0x2a67c32b50
+<a id="__codelineno-35-19" name="__codelineno-35-19" href="#__codelineno-35-19"></a><span class="w"> </span><span class="nv">ruid</span><span class="o">=</span><span class="m">1000</span><span class="w"> </span><span class="nv">euid</span><span class="o">=</span><span class="m">1000</span><span class="w"> </span><span class="nv">suid</span><span class="o">=</span><span class="m">1000</span><span class="w">  </span><span class="nv">rgid</span><span class="o">=</span><span class="m">1000</span><span class="w"> </span><span class="nv">egid</span><span class="o">=</span><span class="m">1000</span><span class="w"> </span><span class="nv">sgid</span><span class="o">=</span><span class="m">1000</span>
+<a id="__codelineno-35-20" name="__codelineno-35-20" href="#__codelineno-35-20"></a><span class="w"> </span><span class="nv">ign</span><span class="o">=</span><span class="m">0000000000000000</span><span class="w"> </span><span class="nv">queue</span><span class="o">=</span>ff00000000000000<span class="w"> </span><span class="nv">pending</span><span class="o">=</span><span class="m">0000000000000000</span>
+<a id="__codelineno-35-21" name="__codelineno-35-21" href="#__codelineno-35-21"></a><span class="w"> </span><span class="nv">fds</span><span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="nv">threads</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">timers</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">chans</span><span class="o">=</span><span class="m">1</span>
+<a id="__codelineno-35-22" name="__codelineno-35-22" href="#__codelineno-35-22"></a><span class="w"> </span><span class="nv">canstub</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">sigstub</span><span class="o">=</span><span class="m">0</span>
+<a id="__codelineno-35-23" name="__codelineno-35-23" href="#__codelineno-35-23"></a>argc:<span class="w"> </span><span class="m">1</span><span class="w"> </span>argv:<span class="w"> </span>./crash_demo
+<a id="__codelineno-35-24" name="__codelineno-35-24" href="#__codelineno-35-24"></a>
+<a id="__codelineno-35-25" name="__codelineno-35-25" href="#__codelineno-35-25"></a><span class="w"> </span>thread<span class="w"> </span><span class="m">1</span><span class="w"> </span>SIGNALLED-unknown<span class="o">(</span><span class="m">0</span><span class="o">)</span><span class="w"> </span><span class="nv">code</span><span class="o">=</span><span class="m">0</span><span class="w">  </span>from<span class="w"> </span><span class="nv">pid</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">uid</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">value</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>0x0<span class="o">)</span>
+<a id="__codelineno-35-26" name="__codelineno-35-26" href="#__codelineno-35-26"></a><span class="w">  </span><span class="nv">ip</span><span class="o">=</span>0x1e6272e7f4<span class="w"> </span><span class="nv">sp</span><span class="o">=</span>0x2a67c32b30<span class="w"> </span><span class="nv">stkbase</span><span class="o">=</span>0x2a67bb2000<span class="w"> </span><span class="nv">stksize</span><span class="o">=</span><span class="m">528384</span>
+<a id="__codelineno-35-27" name="__codelineno-35-27" href="#__codelineno-35-27"></a><span class="w">  </span><span class="nv">state</span><span class="o">=</span>STOPPED<span class="w"> </span><span class="nv">flags</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="nv">last_cpu</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">timeout</span><span class="o">=</span><span class="m">00000000</span>
+<a id="__codelineno-35-28" name="__codelineno-35-28" href="#__codelineno-35-28"></a><span class="w">  </span><span class="nv">pri</span><span class="o">=</span><span class="m">10</span><span class="w"> </span><span class="nv">realpri</span><span class="o">=</span><span class="m">10</span><span class="w"> </span><span class="nv">policy</span><span class="o">=</span>RR
+<a id="__codelineno-35-29" name="__codelineno-35-29" href="#__codelineno-35-29"></a><span class="w">  </span><span class="nv">tls</span><span class="o">=</span>0x2a67c32f60
+</code></pre></div>
+<p>从这个输出里，至少可以先确认：</p>
+<ul>
+<li>这是 Raspberry Pi 5 上生成的 core</li>
+<li>架构是 ARM AArch64</li>
+<li>进程名和参数是 <code>./crash_demo</code></li>
+<li>当前 core 里只有 1 个线程</li>
+<li>线程状态已经是 <code>STOPPED</code></li>
+</ul>
+<p>如果 Target 上也带了 <code>coreinfo</code>，也可以直接在 Target 上看；但对当前这套环境来说，默认推荐把 <code>coreinfo</code> 放在 Host 分析流程里。</p>
+<h2 id="12-host-core">12. 在 Host 上分析 core<a class="headerlink" href="#12-host-core" title="Permanent link">&para;</a></h2>
+<p>这种方式更适合当前这套开发环境。</p>
+<p>基本流程是：</p>
+<ol>
+<li>在 target 上生成 core</li>
+<li>把 core 拷回 host</li>
+<li>在 host 上用 QNX 提供的调试工具分析</li>
+</ol>
+<p>示例：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/path/to/app.core<span class="w"> </span>.
+<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/path/to/app<span class="w"> </span>.
+</code></pre></div>
+<p>然后在 host 上执行：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>coreinfo<span class="w"> </span>-i<span class="w"> </span>./app-*.core
+<a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>coreinfo<span class="w"> </span>-t<span class="w"> </span>./app-*.core
+<a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>ntoaarch64-gdb<span class="w"> </span>./app<span class="w"> </span>./app-*.core
+</code></pre></div>
+<p>这种方式的优点：</p>
+<ul>
+<li>不占用 target 上的调试环境</li>
+<li>分析时更方便保存输出</li>
+<li>更适合长期排查和反复看调用栈</li>
+</ul>
+<h2 id="13-ntoaarch64-gdb-core">13. 用 <code>ntoaarch64-gdb</code> 解析 core<a class="headerlink" href="#13-ntoaarch64-gdb-core" title="Permanent link">&para;</a></h2>
+<p>Raspberry Pi 5 这种 AArch64 目标：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>ntoaarch64-gdb<span class="w"> </span>./app<span class="w"> </span>./app.core
+</code></pre></div>
+<p>当前这套环境里的实际示例：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>$<span class="w"> </span>ntoaarch64-gdb<span class="w"> </span>./crash_demo<span class="w"> </span>./crash_demo.core
+<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>GNU<span class="w"> </span>gdb<span class="w"> </span><span class="o">(</span>qnx800-gdb-14.2-release-32-gb61e35-<span class="o">)</span><span class="w"> </span><span class="m">14</span>.2
+<a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>Copyright<span class="w"> </span><span class="o">(</span>C<span class="o">)</span><span class="w"> </span><span class="m">2023</span><span class="w"> </span>Free<span class="w"> </span>Software<span class="w"> </span>Foundation,<span class="w"> </span>Inc.
+<a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>License<span class="w"> </span>GPLv3+:<span class="w"> </span>GNU<span class="w"> </span>GPL<span class="w"> </span>version<span class="w"> </span><span class="m">3</span><span class="w"> </span>or<span class="w"> </span>later<span class="w"> </span>&lt;http://gnu.org/licenses/gpl.html&gt;
+<a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>This<span class="w"> </span>is<span class="w"> </span>free<span class="w"> </span>software:<span class="w"> </span>you<span class="w"> </span>are<span class="w"> </span>free<span class="w"> </span>to<span class="w"> </span>change<span class="w"> </span>and<span class="w"> </span>redistribute<span class="w"> </span>it.
+<a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>There<span class="w"> </span>is<span class="w"> </span>NO<span class="w"> </span>WARRANTY,<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>extent<span class="w"> </span>permitted<span class="w"> </span>by<span class="w"> </span>law.
+<a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>Type<span class="w"> </span><span class="s2">&quot;show copying&quot;</span><span class="w"> </span>and<span class="w"> </span><span class="s2">&quot;show warranty&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>details.
+<a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>This<span class="w"> </span>GDB<span class="w"> </span>was<span class="w"> </span>configured<span class="w"> </span>as<span class="w"> </span><span class="s2">&quot;--host=x86_64-pc-linux-gnu --target=aarch64-nto-qnx8.0.0&quot;</span>.
+<a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>Type<span class="w"> </span><span class="s2">&quot;show configuration&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>configuration<span class="w"> </span>details.
+<a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>For<span class="w"> </span>bug<span class="w"> </span>reporting<span class="w"> </span>instructions,<span class="w"> </span>please<span class="w"> </span>see:
+<a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>&lt;https://www.gnu.org/software/gdb/bugs/&gt;.
+<a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>Find<span class="w"> </span>the<span class="w"> </span>GDB<span class="w"> </span>manual<span class="w"> </span>and<span class="w"> </span>other<span class="w"> </span>documentation<span class="w"> </span>resources<span class="w"> </span>online<span class="w"> </span>at:
+<a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a><span class="w">    </span>&lt;http://www.gnu.org/software/gdb/documentation/&gt;.
+<a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>
+<a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a>For<span class="w"> </span>help,<span class="w"> </span><span class="nb">type</span><span class="w"> </span><span class="s2">&quot;help&quot;</span>.
+<a id="__codelineno-39-16" name="__codelineno-39-16" href="#__codelineno-39-16"></a>Type<span class="w"> </span><span class="s2">&quot;apropos word&quot;</span><span class="w"> </span>to<span class="w"> </span>search<span class="w"> </span><span class="k">for</span><span class="w"> </span>commands<span class="w"> </span>related<span class="w"> </span>to<span class="w"> </span><span class="s2">&quot;word&quot;</span>...
+<a id="__codelineno-39-17" name="__codelineno-39-17" href="#__codelineno-39-17"></a>Reading<span class="w"> </span>symbols<span class="w"> </span>from<span class="w"> </span>./crash_demo...
+<a id="__codelineno-39-18" name="__codelineno-39-18" href="#__codelineno-39-18"></a><span class="o">[</span>New<span class="w"> </span>pid<span class="w"> </span><span class="m">50257946</span><span class="w"> </span>tid<span class="w"> </span><span class="m">1</span><span class="o">]</span>
+<a id="__codelineno-39-19" name="__codelineno-39-19" href="#__codelineno-39-19"></a>Core<span class="w"> </span>was<span class="w"> </span>generated<span class="w"> </span>by<span class="w"> </span><span class="sb">`</span>/dev/shmem/./crash_demo<span class="err">&#39;</span>.
+<a id="__codelineno-39-20" name="__codelineno-39-20" href="#__codelineno-39-20"></a>Program<span class="w"> </span>terminated<span class="w"> </span>with<span class="w"> </span>signal<span class="w"> </span>SIGSEGV,<span class="w"> </span>Segmentation<span class="w"> </span>fault.
+<a id="__codelineno-39-21" name="__codelineno-39-21" href="#__codelineno-39-21"></a><span class="c1">#0  0x0000001e6272e7f4 in main () at crash_demo.c:6</span>
+<a id="__codelineno-39-22" name="__codelineno-39-22" href="#__codelineno-39-22"></a><span class="m">6</span><span class="w">       </span>*p<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">;</span>
+</code></pre></div>
+<p>看到这一步，至少可以确认几件事：</p>
+<ul>
+<li><code>core</code> 文件可以被正常打开</li>
+<li>GDB 已经识别出崩溃信号是 <code>SIGSEGV</code></li>
+<li>符号信息是匹配的</li>
+<li>崩溃点已经定位到 <code>crash_demo.c:6</code></li>
+</ul>
+<p>进入 GDB 以后先执行：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>bt
+<a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>info threads
+<a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>thread apply all bt
+<a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a>frame 0
+<a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>list
+<a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>info locals
+<a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>info args
+</code></pre></div>
+<p>先看：</p>
+<ol>
+<li><code>bt</code></li>
+<li><code>thread apply all bt</code></li>
+<li><code>frame 0</code></li>
+<li><code>info locals</code></li>
+</ol>
+<h2 id="14">14. 一套最小流程<a class="headerlink" href="#14" title="Permanent link">&para;</a></h2>
+<h3 id="target">target<a class="headerlink" href="#target" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>./app
+<a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>ls<span class="w"> </span>-l
+<a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a>su
+<a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>/tmp/app.core
+</code></pre></div>
+<p>如果程序没 crash，但要手工导：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>pidin<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>app
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>dumper<span class="w"> </span>-p<span class="w"> </span>&lt;pid&gt;
+</code></pre></div>
+<h3 id="host">host 分析<a class="headerlink" href="#host" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>scp<span class="w"> </span>qnxuser@192.168.3.153:/tmp/app.core<span class="w"> </span>./
+<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>coreinfo<span class="w"> </span>-i<span class="w"> </span>./app-*.core
+<a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>coreinfo<span class="w"> </span>-t<span class="w"> </span>./app-*.core
+<a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>ntoaarch64-gdb<span class="w"> </span>./app<span class="w"> </span>./app-*.core
+</code></pre></div>
+<h3 id="gdb">GDB 内<a class="headerlink" href="#gdb" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>bt
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>thread apply all bt
+<a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>frame 0
+<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a>info locals
+<a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a>info args
+</code></pre></div>
+<h2 id="15">15. 常见检查点<a class="headerlink" href="#15" title="Permanent link">&para;</a></h2>
+<p>如果流程走不通，先查这几个点：</p>
+<ul>
+<li><code>dumper</code> 是否真的在跑</li>
+<li>core 实际默认落到了哪里</li>
+<li>core 是否真的生成了</li>
+<li>core 是否是 <code>root:root</code></li>
+<li>host 上的二进制是否和 target 崩溃时的版本一致</li>
+<li>符号是否保留</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../security/secpol-troubleshooting/" class="btn btn-neutral float-left" title="secpol 排错与检查清单"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/SwartzMss/QNX_Helper" class="fa fa-code-fork" style="color: #fcfcfc"> QNX_Helper</a>
+        </span>
+    
+    
+      <span><a href="../../security/secpol-troubleshooting/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://swartzmss.github.io/QNX_Helper/getting-started/setup/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>环境搭建 - QNX Helper</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../stylesheets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u73af\u5883\u642d\u5efa";
+        var mkdocs_page_input_path = "getting-started/setup.md";
+        var mkdocs_page_url = "/QNX_Helper/getting-started/setup/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> QNX Helper
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../overview/">QNX 简介</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../qnx-vs-linux/">QNX 和 Linux 的区别</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">环境搭建</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#qnx-sdp-80-raspberry-pi-5">QNX SDP 8.0 + Raspberry Pi 5 环境搭建记录</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#1">1. 整体目标</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2-myqnx">2. 注册 myQNX 账号</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-license">3. 申请免费非商业 License</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-qnx-software-center">4. 下载 QNX Software Center</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5-wsl2-qnx-software-center">5. 在 WSL2 中安装 QNX Software Center</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6-license">6. 使用命令行添加 License</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7-qnx-sdp-80">7. 安装 QNX SDP 8.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#8-qnx">8. 测试交叉编译 QNX 程序</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#9-raspberry-pi-5-bsp">9. 安装 Raspberry Pi 5 BSP</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10-bsp">10. 解压 BSP 到工作目录</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#11-raspberry-pi-5-qnx">11. 构建 Raspberry Pi 5 QNX 启动镜像</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12-microsd">12. 准备 microSD 启动卡</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13-configtxt">13. 修改 config.txt</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#14-raspberry-pi-5">14. 启动 Raspberry Pi 5</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#15-ssh-qnx">15. SSH 登录 QNX</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#16-qnx">16. 验证系统是否为 QNX</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#17">17. 后续如何运行自己的程序</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../commands/common-commands/">常用命令</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol/">安全策略（secpol）</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-policy-example/">secpol 策略语言与示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-resource-manager-example/">Resource Manager 的 secpol 示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-troubleshooting/">secpol 排错与检查清单</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../debug/crash-debugging/">Crash 调试</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">QNX Helper</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">环境搭建</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/SwartzMss/QNX_Helper/edit/master/docs/getting-started/setup.md">Edit on QNX_Helper</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1">环境搭建<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<h2 id="qnx-sdp-80-raspberry-pi-5">QNX SDP 8.0 + Raspberry Pi 5 环境搭建记录<a class="headerlink" href="#qnx-sdp-80-raspberry-pi-5" title="Permanent link">&para;</a></h2>
+<h2 id="1">1. 整体目标<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>本次搭建的目标是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Windows / WSL2 作为开发机 Host
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  ↓
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>安装 QNX Software Center
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ↓
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>安装 QNX SDP 8.0
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  ↓
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>安装 Raspberry Pi 5 BSP
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  ↓
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>构建 ifs-rpi5.bin
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  ↓
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>制作 microSD 启动卡
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  ↓
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>树莓派 5 启动 QNX
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  ↓
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>通过 SSH 登录验证
+</code></pre></div>
+<p>这里要区分两个概念：</p>
+<ul>
+<li><code>Host</code>：开发机，用于安装工具链、交叉编译、构建镜像</li>
+<li><code>Target</code>：目标板，也就是 Raspberry Pi 5，真正运行 QNX OS</li>
+</ul>
+<p>QNX SDP 本质上是一个交叉编译和调试环境，用于给运行 QNX OS 的目标板构建程序和镜像。</p>
+<h2 id="2-myqnx">2. 注册 myQNX 账号<a class="headerlink" href="#2-myqnx" title="Permanent link">&para;</a></h2>
+<p>首先需要注册一个 <code>myQNX</code> 账号。</p>
+<p>QNX 的免费非商业许可要求先拥有 <code>myQNX</code> 账号，然后才能访问 license 和相关下载。注册完成后，用这个账号登录 QNX 官网。</p>
+<h2 id="3-license">3. 申请免费非商业 License<a class="headerlink" href="#3-license" title="Permanent link">&para;</a></h2>
+<p>如果只是个人学习、实验、非商业用途，可以申请：</p>
+<p><code>QNX SDP 8.0 Free Access for Non-Commercial Use</code></p>
+<p>这个许可面向 <code>hobbyist</code>、<code>student</code>、<code>industry professional</code> 的个人非商业使用。</p>
+<p>申请流程大概是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>登录 myQNX
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  ↓
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>进入 QNX SDP 8.0 Free Access 页面
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  ↓
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>接受 non-commercial license 条款
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  ↓
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>获取 license key
+</code></pre></div>
+<p>后续安装 QNX SDP 时，需要用到：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">USER_NAME</span><span class="o">=</span><span class="s2">&quot;你的 myQNX 邮箱&quot;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PASSWORD</span><span class="o">=</span><span class="s2">&quot;你的 myQNX 密码&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">LICENSE_KEY</span><span class="o">=</span><span class="s2">&quot;你的 QNX license key&quot;</span>
+</code></pre></div>
+<h2 id="4-qnx-software-center">4. 下载 QNX Software Center<a class="headerlink" href="#4-qnx-software-center" title="Permanent link">&para;</a></h2>
+<p>QNX Software Center 是官方用来下载和管理 QNX SDP、BSP、附加组件的工具。</p>
+<p>下载时有两个版本：</p>
+<ul>
+<li><code>QNX Software Center - Linux Hosts</code></li>
+<li><code>QNX Software Center - Windows Hosts</code></li>
+</ul>
+<p>选择规则：</p>
+<ul>
+<li>Windows 原生安装：选 <code>Windows Hosts</code></li>
+<li>Ubuntu / WSL2 安装：选 <code>Linux Hosts</code></li>
+</ul>
+<p>本次是在 WSL2 Ubuntu 里操作，所以下载的是：</p>
+<p><code>qnx-setup-2.0.4-202501021438-linux.run</code></p>
+<h2 id="5-wsl2-qnx-software-center">5. 在 WSL2 中安装 QNX Software Center<a class="headerlink" href="#5-wsl2-qnx-software-center" title="Permanent link">&para;</a></h2>
+<p>假设安装包在用户目录下：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">cd</span><span class="w"> </span>~
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>chmod<span class="w"> </span>+x<span class="w"> </span>qnx-setup-2.0.4-202501021438-linux.run
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./qnx-setup-2.0.4-202501021438-linux.run
+</code></pre></div>
+<p>安装后默认目录类似：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>~/qnx/qnxsoftwarecenter
+</code></pre></div>
+<p>检查：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>ls<span class="w"> </span>~/qnx/qnxsoftwarecenter
+</code></pre></div>
+<p>能看到类似内容：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>qnxsoftwarecenter
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>qnxsoftwarecenter_clt
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>plugins
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>features
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>configuration
+</code></pre></div>
+<p>如果 GUI 报错，例如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>gtk_init_check() failed
+</code></pre></div>
+<p>这不影响命令行安装。<code>qnxsoftwarecenter_clt</code> 可以从命令行运行 Software Center，并且它和 GUI 使用同一套基础设施。</p>
+<h2 id="6-license">6. 使用命令行添加 License<a class="headerlink" href="#6-license" title="Permanent link">&para;</a></h2>
+<p>先设置环境变量：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">USER_NAME</span><span class="o">=</span><span class="s2">&quot;你的 myQNX 邮箱&quot;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PASSWORD</span><span class="o">=</span><span class="s2">&quot;你的 myQNX 密码&quot;</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">LICENSE_KEY</span><span class="o">=</span><span class="s2">&quot;你的 QNX 免费非商业 license key&quot;</span>
+</code></pre></div>
+<p>添加 license：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>~/qnx/qnxsoftwarecenter/qnxsoftwarecenter_clt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>-myqnx.user<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>-myqnx.password<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PASSWORD</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>-addLicenseKey<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$LICENSE_KEY</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h2 id="7-qnx-sdp-80">7. 安装 QNX SDP 8.0<a class="headerlink" href="#7-qnx-sdp-80" title="Permanent link">&para;</a></h2>
+<p>使用命令行安装 SDP 到 <code>~/qnx800</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>~/qnx/qnxsoftwarecenter/qnxsoftwarecenter_clt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>-myqnx.user<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>-myqnx.password<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PASSWORD</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>-cleanInstall<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>-mirrorBaseline<span class="w"> </span>qnx800<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span>-installBaseline<span class="w"> </span>com.qnx.qnx800<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span>-destination<span class="w"> </span>~/qnx800
+</code></pre></div>
+<p>安装完成后加载环境：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">source</span><span class="w"> </span>~/qnx800/qnxsdp-env.sh
+</code></pre></div>
+<p>正常会看到类似：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>QNX_HOST=/home/swartz/qnx800/host/linux/x86_64
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>QNX_TARGET=/home/swartz/qnx800/target/qnx
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>MAKEFLAGS=-I/home/swartz/qnx800/target/qnx/usr/include
+</code></pre></div>
+<p>验证编译器：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>qcc
+</code></pre></div>
+<p>如果能正常响应，说明 SDP 环境已经可用。</p>
+<h2 id="8-qnx">8. 测试交叉编译 QNX 程序<a class="headerlink" href="#8-qnx" title="Permanent link">&para;</a></h2>
+<p>创建一个简单程序：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello QNX on Raspberry Pi 5!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="p">}</span>
+</code></pre></div>
+<p>保存为 <code>hello.c</code> 后，针对 Raspberry Pi 5 的 AArch64 架构编译：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>qcc<span class="w"> </span>-Vgcc_ntoaarch64le<span class="w"> </span>hello.c<span class="w"> </span>-o<span class="w"> </span>hello_qnx
+</code></pre></div>
+<p>检查文件类型：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>file<span class="w"> </span>hello_qnx
+</code></pre></div>
+<p>实际输出类似：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>hello_qnx: ELF 64-bit LSB pie executable, ARM aarch64,
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>dynamically linked, interpreter /usr/lib/ldqnx-64.so.2
+</code></pre></div>
+<p>这说明已经成功生成 QNX AArch64 可执行文件。</p>
+<p>注意：这个程序不能直接在 WSL 里运行，它要放到真正运行 QNX 的 target 上执行。</p>
+<h2 id="9-raspberry-pi-5-bsp">9. 安装 Raspberry Pi 5 BSP<a class="headerlink" href="#9-raspberry-pi-5-bsp" title="Permanent link">&para;</a></h2>
+<p>QNX 官方提供了 Raspberry Pi 5 BCM2712 的 BSP。该 BSP 用于支持 Raspberry Pi 5，并包含预构建二进制、buildfiles，以及用于启动 QNX RTOS 的内容。</p>
+<p>先查看可安装包：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>~/qnx/qnxsoftwarecenter/qnxsoftwarecenter_clt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span>-myqnx.user<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>-myqnx.password<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PASSWORD</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span>-destination<span class="w"> </span>~/qnx800<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span>-listAccessible<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-Ei<span class="w"> </span><span class="s2">&quot;raspberry|bcm2712|rpi5&quot;</span>
+</code></pre></div>
+<p>实际看到的关键包：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>com.qnx.qnx800.bsp.hw.raspberrypi_bcm2712_rpi5=0.3.0.00381T202512101351L
+</code></pre></div>
+<p>安装 Pi 5 BSP：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>~/qnx/qnxsoftwarecenter/qnxsoftwarecenter_clt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span>-myqnx.user<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$USER_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span>-myqnx.password<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PASSWORD</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span>-destination<span class="w"> </span>~/qnx800<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">  </span>-installPackage<span class="w"> </span>com.qnx.qnx800.bsp.hw.raspberrypi_bcm2712_rpi5
+</code></pre></div>
+<p>检查是否安装：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>~/qnx/qnxsoftwarecenter/qnxsoftwarecenter_clt<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span>-destination<span class="w"> </span>~/qnx800<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span>-listInstalled<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-Ei<span class="w"> </span><span class="s2">&quot;raspberry|bcm2712|rpi5&quot;</span>
+</code></pre></div>
+<p>查找 BSP zip：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>find<span class="w"> </span>~/qnx800/bsp<span class="w"> </span>-iname<span class="w"> </span><span class="s1">&#39;*raspberry*&#39;</span><span class="w"> </span>-o<span class="w"> </span>-iname<span class="w"> </span><span class="s1">&#39;*bcm2712*&#39;</span><span class="w"> </span>-o<span class="w"> </span>-iname<span class="w"> </span><span class="s1">&#39;*rpi5*&#39;</span>
+</code></pre></div>
+<h2 id="10-bsp">10. 解压 BSP 到工作目录<a class="headerlink" href="#10-bsp" title="Permanent link">&para;</a></h2>
+<p>不建议直接在 <code>~/qnx800</code> 里改 BSP，单独放一个工作目录。</p>
+<p>本次使用：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/qnx_bsp
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nb">cd</span><span class="w"> </span>~/qnx_bsp
+</code></pre></div>
+<p>找到 BSP zip：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="nv">BSP_ZIP</span><span class="o">=</span><span class="k">$(</span>find<span class="w"> </span>~/qnx800/bsp<span class="w"> </span>-iname<span class="w"> </span><span class="s1">&#39;*raspberry*bcm2712*rpi5*.zip&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BSP_ZIP</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>解压：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>unzip<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BSP_ZIP</span><span class="s2">&quot;</span><span class="w"> </span>-d<span class="w"> </span>./bsp-rpi5
+</code></pre></div>
+<p>查找 <code>images</code> 目录：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>find<span class="w"> </span>~/qnx_bsp/bsp-rpi5<span class="w"> </span>-maxdepth<span class="w"> </span><span class="m">4</span><span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-name<span class="w"> </span>images
+</code></pre></div>
+<p>实际结果：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>/home/swartz/qnx_bsp/bsp-rpi5/images
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>/home/swartz/qnx_bsp/bsp-rpi5/binary_files_with_symbols/images
+</code></pre></div>
+<p>使用第一个作为 BSP 构建入口：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">BSP_ROOT_DIR</span><span class="o">=</span>/home/swartz/qnx_bsp/bsp-rpi5
+</code></pre></div>
+<h2 id="11-raspberry-pi-5-qnx">11. 构建 Raspberry Pi 5 QNX 启动镜像<a class="headerlink" href="#11-raspberry-pi-5-qnx" title="Permanent link">&para;</a></h2>
+<p>加载 SDP 环境：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="nb">source</span><span class="w"> </span>~/qnx800/qnxsdp-env.sh
+</code></pre></div>
+<p>清理旧产物：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BSP_ROOT_DIR</span><span class="s2">/images&quot;</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>make<span class="w"> </span>clean
+</code></pre></div>
+<p>回到 BSP 根目录构建：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BSP_ROOT_DIR</span><span class="s2">&quot;</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>make
+</code></pre></div>
+<p><code>$BSP_ROOT_DIR/images/Makefile</code> 中的 <code>all</code> 目标用于构建 QNX IFS，<code>ifs-rpi5.bin</code> 是 Raspberry Pi bootloader 通过 <code>config.txt</code> 加载的 IFS 文件。</p>
+<p>检查产物：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>ls<span class="w"> </span>-lh<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BSP_ROOT_DIR</span><span class="s2">/images/ifs-rpi5.bin&quot;</span>
+</code></pre></div>
+<p>实际生成结果：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>-rw-rw-r-- 1 swartz swartz 39M Apr 24 21:37 /home/swartz/qnx_bsp/bsp-rpi5/images/ifs-rpi5.bin
+</code></pre></div>
+<p>这说明 Pi 5 的 QNX 启动镜像已经构建完成。</p>
+<h2 id="12-microsd">12. 准备 microSD 启动卡<a class="headerlink" href="#12-microsd" title="Permanent link">&para;</a></h2>
+<p>这里容易误解：</p>
+<ul>
+<li><code>ifs-rpi5.bin</code> 不是完整 SD 卡镜像</li>
+<li>不能直接在 Raspberry Pi Imager 里选择“自定义镜像”烧录</li>
+</ul>
+<p>正确做法是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>先用 Raspberry Pi Imager 烧录 Raspberry Pi OS
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>  ↓
+<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>获得正常的 boot 分区和 firmware 文件
+<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>  ↓
+<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a>再把 ifs-rpi5.bin 拷进去
+<a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>  ↓
+<a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a>修改 config.txt
+</code></pre></div>
+<p>QNX IFS image 需要复制到 microSD 中，并且文件名必须是 <code>ifs-rpi5.bin</code>，因为它是 <code>config.txt</code> 中定义的启动镜像名。</p>
+<h2 id="13-configtxt">13. 修改 config.txt<a class="headerlink" href="#13-configtxt" title="Permanent link">&para;</a></h2>
+<p>在 microSD 的 <code>boot</code> 分区里，确保有：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>config.txt
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>ifs-rpi5.bin
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>*.dtb
+<a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a>overlays/
+<a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a>start*.elf
+<a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a>fixup*.dat
+</code></pre></div>
+<p>在 <code>config.txt</code> 末尾加入：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="k">[rpi5]</span>
+<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="na">enable_uart</span><span class="o">=</span><span class="s">1</span>
+<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a><span class="na">force_turbo</span><span class="o">=</span><span class="s">1</span>
+<a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a><span class="na">kernel</span><span class="o">=</span><span class="s">ifs-rpi5.bin</span>
+</code></pre></div>
+<p>关键是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="na">kernel</span><span class="o">=</span><span class="s">ifs-rpi5.bin</span>
+</code></pre></div>
+<p>它告诉 Raspberry Pi firmware 加载 QNX 的 IFS 镜像，而不是 Linux kernel。</p>
+<h2 id="14-raspberry-pi-5">14. 启动 Raspberry Pi 5<a class="headerlink" href="#14-raspberry-pi-5" title="Permanent link">&para;</a></h2>
+<p>将 microSD 插入 Raspberry Pi 5。</p>
+<p>推荐硬件连接：</p>
+<ul>
+<li>Pi 5 电源</li>
+<li>Pi 5 网线接路由器</li>
+<li>可选 HDMI 显示器</li>
+<li>可选串口调试线</li>
+</ul>
+<p>本次没有 Debug Probe，也没有 USB-TTL 串口线，所以采用：</p>
+<p><code>有线网口 + 路由器 DHCP + SSH</code></p>
+<p>启动后，在路由器后台查看新设备 IP。</p>
+<p>本次获取到的 IP：</p>
+<p><code>192.168.3.153</code></p>
+<h2 id="15-ssh-qnx">15. SSH 登录 QNX<a class="headerlink" href="#15-ssh-qnx" title="Permanent link">&para;</a></h2>
+<p>在 Windows CMD / PowerShell 中执行：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>ssh<span class="w"> </span>qnxuser@192.168.3.153
+</code></pre></div>
+<p>密码：</p>
+<p><code>qnxuser</code></p>
+<p>登录成功后看到：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>$
+<a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>$
+<a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>$
+</code></pre></div>
+<p>说明已经进入远端 shell。</p>
+<h2 id="16-qnx">16. 验证系统是否为 QNX<a class="headerlink" href="#16-qnx" title="Permanent link">&para;</a></h2>
+<p>登录后执行：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>uname<span class="w"> </span>-a
+</code></pre></div>
+<p>或者：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>uname<span class="w"> </span>-s
+</code></pre></div>
+<p>如果输出包含：</p>
+<p><code>QNX</code></p>
+<p>说明当前系统就是 QNX。</p>
+<p>还可以执行：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>pidin
+</code></pre></div>
+<p><code>pidin</code> 是 QNX 中常用的进程和系统查看工具。</p>
+<p>也可以查看：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>ls<span class="w"> </span>/proc/boot
+</code></pre></div>
+<p>QNX 的启动镜像内容通常可以在 <code>/proc/boot</code> 下看到。</p>
+<p>推荐验证命令：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>uname<span class="w"> </span>-a
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>uname<span class="w"> </span>-s
+<a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>uname<span class="w"> </span>-m
+<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a>pidin<span class="w"> </span>info
+<a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a>ls<span class="w"> </span>/proc/boot
+</code></pre></div>
+<h2 id="17">17. 后续如何运行自己的程序<a class="headerlink" href="#17" title="Permanent link">&para;</a></h2>
+<p>之前在 WSL 中编译出来的程序是：</p>
+<p><code>hello_qnx</code></p>
+<p>它是 QNX/AArch64 可执行文件。</p>
+<p>后续流程是：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>WSL 中交叉编译
+<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>  ↓
+<a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>通过 scp / sftp / qconn / SD 卡传到 Pi 5
+<a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a>  ↓
+<a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a>在 QNX shell 中运行
+</code></pre></div>
+<p>例如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>scp<span class="w"> </span>hello_qnx<span class="w"> </span>qnxuser@192.168.3.153:/tmp/
+</code></pre></div>
+<p>登录 QNX 后：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="nb">cd</span><span class="w"> </span>/tmp
+<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>chmod<span class="w"> </span>+x<span class="w"> </span>hello_qnx
+<a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a>./hello_qnx
+</code></pre></div>
+<p>如果输出：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>Hello QNX on Raspberry Pi 5!
+</code></pre></div>
+<p>就说明从编译到 target 运行全部打通。</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../qnx-vs-linux/" class="btn btn-neutral float-left" title="QNX 和 Linux 的区别"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../commands/common-commands/" class="btn btn-neutral float-right" title="常用命令">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/SwartzMss/QNX_Helper" class="fa fa-code-fork" style="color: #fcfcfc"> QNX_Helper</a>
+        </span>
+    
+    
+      <span><a href="../qnx-vs-linux/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../commands/common-commands/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

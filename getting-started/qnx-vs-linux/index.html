@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://swartzmss.github.io/QNX_Helper/getting-started/qnx-vs-linux/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>QNX 和 Linux 的区别 - QNX Helper</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../stylesheets/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "QNX \u548c Linux \u7684\u533a\u522b";
+        var mkdocs_page_input_path = "getting-started/qnx-vs-linux.md";
+        var mkdocs_page_url = "/QNX_Helper/getting-started/qnx-vs-linux/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> QNX Helper
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../overview/">QNX 简介</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">QNX 和 Linux 的区别</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1-qnx-linux">1. 最大差异：QNX 是微内核，Linux 是宏内核</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2-ipc-qnx-message-passing">2. IPC 是核心：QNX 的灵魂是 message passing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-resource-manager-qnx">3. Resource Manager 是 QNX 很大的不同点</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4">4. 实时性思维更强</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5-posix-linux">5. POSIX 很像，但不能认为“Linux 代码直接搬过去就行”</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6">6. 驱动和系统服务开发差异最大</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7">7. 编译方式也不一样：天然交叉编译</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#8">8. 调试和排查工具不同</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#9-5">9. 对当前学习最该先抓住的 5 个差异</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10">10. 一句话类比</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setup/">环境搭建</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../commands/common-commands/">常用命令</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol/">安全策略（secpol）</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-policy-example/">secpol 策略语言与示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-resource-manager-example/">Resource Manager 的 secpol 示例</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../security/secpol-troubleshooting/">secpol 排错与检查清单</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../debug/crash-debugging/">Crash 调试</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">QNX Helper</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">QNX 和 Linux 的区别</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/SwartzMss/QNX_Helper/edit/master/docs/getting-started/qnx-vs-linux.md">Edit on QNX_Helper</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="qnx-linux">QNX 和 Linux 的区别<a class="headerlink" href="#qnx-linux" title="Permanent link">&para;</a></h1>
+<p>Linux 编程更像“在一个宏内核系统上写 POSIX 应用”；QNX 编程更像“在一个微内核实时系统上写一组通过消息协作的进程或服务”。</p>
+<h2 id="1-qnx-linux">1. 最大差异：QNX 是微内核，Linux 是宏内核<a class="headerlink" href="#1-qnx-linux" title="Permanent link">&para;</a></h2>
+<p>Linux 里，很多东西在内核态：文件系统、网络栈、驱动、调度、内存管理等都和内核关系很紧。</p>
+<p>QNX 不一样。QNX 的核心是 <code>microkernel</code>，微内核只保留很核心的能力，比如调度、线程、基础 IPC、部分 POSIX 基础能力。很多服务，比如文件系统、驱动、网络等，都可以作为用户态进程运行。</p>
+<p>所以你会看到 QNX 里很多东西不是“内核模块”，而是“进程”。</p>
+<p>这对编程影响很大：</p>
+<p>Linux 思维：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>应用
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  ↓
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>syscall
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ↓
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>kernel / driver
+</code></pre></div>
+<p>QNX 思维：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>应用
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  ↓
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>message passing
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  ↓
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>resource manager / server process
+</code></pre></div>
+<h2 id="2-ipc-qnx-message-passing">2. IPC 是核心：QNX 的灵魂是 message passing<a class="headerlink" href="#2-ipc-qnx-message-passing" title="Permanent link">&para;</a></h2>
+<p>QNX 最有特色的地方是消息传递机制。</p>
+<p>在 Linux 里，你当然也能用：</p>
+<ul>
+<li><code>socket</code></li>
+<li><code>pipe</code></li>
+<li><code>shared memory</code></li>
+<li><code>message queue</code></li>
+</ul>
+<p>但很多普通应用不一定强依赖这些。</p>
+<p>在 QNX 里，很多系统能力本质上都是消息：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>open / read / write / ioctl
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  ↓
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>被转换成消息
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  ↓
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>发给对应的 resource manager
+</code></pre></div>
+<p>所以 QNX 程序员需要更早理解这些概念：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">ChannelCreate</span><span class="p">();</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">ConnectAttach</span><span class="p">();</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">MsgSend</span><span class="p">();</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">MsgReceive</span><span class="p">();</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">MsgReply</span><span class="p">();</span>
+</code></pre></div>
+<p>你可以把它理解成：</p>
+<p>QNX 把“进程间通信”提升成了系统架构的主干。</p>
+<p>这里有一个很重要的补充：</p>
+<p>这组接口在 QNX 里不是“只存在于文档里”，而是真的会直接用到。</p>
+<p>最常见的场景是：</p>
+<ul>
+<li>自己写 IPC</li>
+<li>写服务进程</li>
+<li>写 <code>resource manager</code></li>
+<li>做客户端 / 服务端模型</li>
+</ul>
+<p>不过也要分清两层：</p>
+<ul>
+<li>写普通应用时，不一定总要自己手写这些接口</li>
+<li>写底层服务、系统组件、消息式架构时，往往就会直接写到它们</li>
+</ul>
+<p>可以把它们理解成：</p>
+<ul>
+<li><code>open/read/write</code> 是上层常见接口</li>
+<li><code>MsgSend/MsgReceive/MsgReply</code> 是 QNX 更底层也更核心的通信接口</li>
+</ul>
+<h2 id="3-resource-manager-qnx">3. Resource Manager 是 QNX 很大的不同点<a class="headerlink" href="#3-resource-manager-qnx" title="Permanent link">&para;</a></h2>
+<p>这是从 Linux 转 QNX 时非常重要的概念。</p>
+<p>QNX 里的 <code>resource manager</code> 可以理解成一个用户态服务进程，它注册一个路径，比如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>/dev/xxx
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>/net/xxx
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>/my/service
+</code></pre></div>
+<p>其他进程通过普通 POSIX API 访问它：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/xxx&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDWR</span><span class="p">);</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">);</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">);</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">devctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
+</code></pre></div>
+<p>但底层其实是消息发送给 <code>resource manager</code> 处理。</p>
+<p>这里也很容易误解成“QNX 里不能直接写 <code>open()</code>、<code>read()</code>、<code>write()</code>”。</p>
+<p>其实不是。QNX 里当然可以这样写，而且这本来就是很常见的写法。</p>
+<p>例如：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;fcntl.h&gt;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/dev/ser1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">O_RDWR</span><span class="p">);</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fd</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">buf</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ok</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="p">}</span>
+</code></pre></div>
+<p>真正的差异不在“能不能写 <code>open/read/write</code>”，而在于：</p>
+<ul>
+<li>Linux 里更容易把它理解成系统调用直接进入内核处理</li>
+<li>QNX 里很多时候这些操作背后会被转换成消息，交给对应的 <code>resource manager</code> 或服务进程处理</li>
+</ul>
+<p>这点和 Linux driver 最大区别是：</p>
+<p>Linux 驱动：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>通常写 kernel module，跑在内核态
+</code></pre></div>
+<p>QNX resource manager：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>很多时候写用户态 server，挂到路径空间里
+</code></pre></div>
+<p>所以 QNX 下做设备或服务抽象时，不一定第一反应是“写内核驱动”，而是可能先考虑写一个 <code>resource manager</code>。</p>
+<h2 id="4">4. 实时性思维更强<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<p>QNX 是 RTOS，写程序时更关注：</p>
+<ul>
+<li>线程优先级</li>
+<li>调度策略</li>
+<li>阻塞点</li>
+<li>IPC 延迟</li>
+<li>中断响应</li>
+<li>优先级反转</li>
+<li>确定性</li>
+</ul>
+<p>Linux 当然也能做实时优化，甚至有 <code>PREEMPT_RT</code>，但普通 Linux 应用开发通常不会把这些放在第一优先级。</p>
+<p>QNX 里不一样。你要非常清楚：</p>
+<ul>
+<li>哪个线程优先级最高</li>
+<li><code>MsgSend()</code> 会不会阻塞</li>
+<li>谁在 <code>MsgReceive()</code></li>
+<li>某个 <code>resource manager</code> 卡住会不会影响调用方</li>
+<li>有没有死锁</li>
+</ul>
+<p>所以 QNX 编程里，“能跑”只是第一层，“可预测地跑”才是重点。</p>
+<h2 id="5-posix-linux">5. POSIX 很像，但不能认为“Linux 代码直接搬过去就行”<a class="headerlink" href="#5-posix-linux" title="Permanent link">&para;</a></h2>
+<p>QNX 是 POSIX 风格系统，所以很多 C/C++ 代码能直接编：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">pthread_create</span><span class="p">();</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">open</span><span class="p">();</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">read</span><span class="p">();</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">write</span><span class="p">();</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">socket</span><span class="p">();</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">select</span><span class="p">();</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">poll</span><span class="p">();</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">mmap</span><span class="p">();</span>
+</code></pre></div>
+<p>这些会让人觉得它和 Linux 很像。</p>
+<p>但坑在于：像，不代表完全一样。</p>
+<p>移植时常见差异：</p>
+<ul>
+<li><code>/proc</code> 内容不一样</li>
+<li><code>/dev</code> 设备路径不一样</li>
+<li><code>ioctl</code> 不一样</li>
+<li><code>socket option</code> 不一定一样</li>
+<li><code>epoll</code> 不一定可用</li>
+<li>Linux 特有系统调用不可用</li>
+<li><code>glibc</code> 扩展不可用</li>
+<li>内核接口不可用</li>
+</ul>
+<p>所以如果代码是“标准 POSIX C/C++”，迁移 QNX 相对顺；如果大量使用 Linux 特性，就会比较痛苦。</p>
+<p>典型 Linux 特有东西：</p>
+<ul>
+<li><code>epoll</code></li>
+<li><code>inotify</code></li>
+<li><code>eventfd</code></li>
+<li><code>timerfd</code></li>
+<li><code>signalfd</code></li>
+<li><code>procfs</code> 细节</li>
+<li><code>sysfs</code></li>
+<li><code>netlink</code></li>
+<li><code>udev</code></li>
+<li>Linux kernel module</li>
+<li><code>cgroup</code></li>
+<li><code>namespace</code></li>
+</ul>
+<p>这些在 QNX 上都不能默认成立。</p>
+<h2 id="6">6. 驱动和系统服务开发差异最大<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<p>如果只是写普通业务应用：</p>
+<ul>
+<li>文件读写</li>
+<li>socket 通信</li>
+<li>多线程</li>
+<li>日志</li>
+<li>配置解析</li>
+</ul>
+<p>那 QNX 和 Linux 差异还可以接受。</p>
+<p>但如果涉及：</p>
+<ul>
+<li>驱动</li>
+<li>硬件访问</li>
+<li>系统启动</li>
+<li>网络栈配置</li>
+<li>BSP</li>
+<li>中断</li>
+<li>设备节点</li>
+<li>服务自启动</li>
+<li>镜像裁剪</li>
+</ul>
+<p>差异就会非常大。</p>
+<p>Linux 里你可能会想到：</p>
+<ul>
+<li><code>kernel module</code></li>
+<li><code>device tree</code></li>
+<li><code>udev</code></li>
+<li><code>systemd</code></li>
+<li><code>/proc</code></li>
+<li><code>/sys</code></li>
+</ul>
+<p>QNX 里你更多会接触：</p>
+<ul>
+<li><code>startup</code></li>
+<li><code>procnto</code></li>
+<li><code>buildfile</code></li>
+<li><code>IFS</code></li>
+<li><code>resource manager</code></li>
+<li><code>devb-xxx</code></li>
+<li><code>devc-xxx</code></li>
+<li><code>io-sock</code></li>
+<li><code>slog2</code></li>
+<li><code>pidin</code></li>
+</ul>
+<p>你现在做的 <code>ifs-rpi5.bin</code> 就是一个典型 QNX 世界里的东西：它不是普通 Linux <code>rootfs</code>，而是 QNX 启动镜像的一部分。</p>
+<h2 id="7">7. 编译方式也不一样：天然交叉编译<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p>你现在已经体验到了：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>qcc<span class="w"> </span>-Vgcc_ntoaarch64le<span class="w"> </span>hello.c<span class="w"> </span>-o<span class="w"> </span>hello_qnx
+</code></pre></div>
+<p>Linux 上通常是在本机编译本机跑，或者用普通交叉工具链。</p>
+<p>QNX 是很典型的：</p>
+<ul>
+<li><code>Host</code>：Windows / Linux / WSL</li>
+<li><code>Target</code>：QNX on ARM / x86</li>
+</ul>
+<p>所以要习惯这些概念：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">source</span><span class="w"> </span>qnxsdp-env.sh
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>qcc
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>q++
+</code></pre></div>
+<p>以及：</p>
+<ul>
+<li><code>QNX_HOST</code></li>
+<li><code>QNX_TARGET</code></li>
+<li>target-specific <code>-V</code> 参数</li>
+</ul>
+<p>你编译出来的 <code>hello_qnx</code> 在 WSL 里不能跑，只能放到 QNX target 上跑。这就是典型的 cross-development。</p>
+<h2 id="8">8. 调试和排查工具不同<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<p>Linux 常用：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ps
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>top
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>dmesg
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>journalctl
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>strace
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>lsof
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>systemctl
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>ip
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>ss
+</code></pre></div>
+<p>QNX 常用：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>pidin
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>slog2info
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>use
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>sin
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>ls<span class="w"> </span>/proc/boot
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>on
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>slay
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>devctl
+</code></pre></div>
+<p>比如你现在进 Pi 5 的 QNX shell 后，可以先跑：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>uname<span class="w"> </span>-a
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>pidin<span class="w"> </span>info
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>pidin<span class="w"> </span>ar
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>slog2info
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>ls<span class="w"> </span>/proc/boot
+</code></pre></div>
+<p><code>pidin</code> 在 QNX 里非常关键，很多时候相当于你在 Linux 下用 <code>ps</code>、<code>top</code>、<code>/proc</code> 查系统状态。</p>
+<h2 id="9-5">9. 对当前学习最该先抓住的 5 个差异<a class="headerlink" href="#9-5" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>差异点</th>
+<th>Linux 思维</th>
+<th>QNX 思维</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内核结构</td>
+<td>宏内核</td>
+<td>微内核</td>
+</tr>
+<tr>
+<td>IPC</td>
+<td>可选工具</td>
+<td>系统核心机制</td>
+</tr>
+<tr>
+<td>驱动/服务</td>
+<td>多在内核态</td>
+<td>很多是用户态 <code>resource manager</code></td>
+</tr>
+<tr>
+<td>启动系统</td>
+<td><code>bootloader + kernel + rootfs + systemd</code></td>
+<td><code>startup + procnto + IFS + buildfile</code></td>
+</tr>
+<tr>
+<td>实时性</td>
+<td>普通应用较少关注</td>
+<td>线程优先级、阻塞、确定性非常关键</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10">10. 一句话类比<a class="headerlink" href="#10" title="Permanent link">&para;</a></h2>
+<p>你可以这么记：</p>
+<p>Linux 更像一个“大内核 + 丰富用户态生态”的通用系统。</p>
+<p>QNX 更像一个“微内核 + 消息总线 + 用户态系统服务”的实时系统。</p>
+<p>所以普通应用层代码可能看起来差不多，但一旦碰到系统服务、驱动、启动镜像、IPC、实时调度，差异就会非常明显。</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../overview/" class="btn btn-neutral float-left" title="QNX 简介"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../setup/" class="btn btn-neutral float-right" title="环境搭建">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/SwartzMss/QNX_Helper" class="fa fa-code-fork" style="color: #fcfcfc"> QNX_Helper</a>
+        </span>
+    
+    
+      <span><a href="../overview/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../setup/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
