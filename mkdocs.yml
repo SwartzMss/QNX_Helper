@@ -32,4 +32,8 @@ nav:
   - QNX 和 Linux 的区别: getting-started/qnx-vs-linux.md
   - 环境搭建: getting-started/setup.md
   - 常用命令: commands/common-commands.md
+  - 安全策略（secpol）: security/secpol.md
+  - secpol 策略语言与示例: security/secpol-policy-example.md
+  - Resource Manager 的 secpol 示例: security/secpol-resource-manager-example.md
+  - secpol 排错与检查清单: security/secpol-troubleshooting.md
   - Crash 调试: debug/crash-debugging.md
